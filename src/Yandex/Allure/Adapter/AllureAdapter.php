@@ -31,7 +31,6 @@ class AllureAdapter extends Extension
 
     //NOTE: here we implicitly assume that PHP runs in single-threaded mode
     private $uuid;
-    private $suiteName;
 
     /**
      * @var Allure
@@ -77,12 +76,14 @@ class AllureAdapter extends Extension
 
     public function suiteBefore(SuiteEvent $suiteEvent)
     {
-        $suiteName = $suiteEvent->getSuite()->getName();
+        $suite = $suiteEvent->getSuite();
+        $suiteName = $suite->getName();
         $event = new TestSuiteStartedEvent($suiteName);
+        if (class_exists($suiteName)){
+            $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getClassAnnotations(get_class($suite)));
+            $annotationManager->updateTestSuiteEvent($event);
+        }
         $this->uuid = $event->getUuid();
-        $this->suiteName = $suiteName;
-        $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getClassAnnotations($suiteEvent->getSuite()));
-        $annotationManager->updateTestSuiteEvent($event);
         $this->getLifecycle()->fire($event);
     }
 
@@ -93,11 +94,14 @@ class AllureAdapter extends Extension
 
     public function testStart(TestEvent $testEvent)
     {
-        $suiteName = $this->suiteName;
-        $testName = $testEvent->getTest()->getName();
+        $test = $testEvent->getTest();
+        $testName = $test->getName();
+        $className = get_class($test);
         $event = new TestCaseStartedEvent($this->uuid, $testName);
-        $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getMethodAnnotations($suiteName, $testName));
-        $annotationManager->updateTestCaseEvent($event);
+        if (method_exists($className, $testName)){
+            $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getMethodAnnotations($className, $testName));
+            $annotationManager->updateTestCaseEvent($event);
+        }
         $this->getLifecycle()->fire($event);
     }
 
@@ -125,6 +129,7 @@ class AllureAdapter extends Extension
     {
         $this->getLifecycle()->fire(new TestCaseFinishedEvent());
     }
+
     public function stepBefore(StepEvent $stepEvent)
     {
         $stepName = $stepEvent->getStep()->getName();
@@ -135,7 +140,7 @@ class AllureAdapter extends Extension
     {
         $this->getLifecycle()->fire(new StepFinishedEvent());
     }
-    
+
     public function stepFail()
     {
         $this->getLifecycle()->fire(new StepFailedEvent());
@@ -151,7 +156,7 @@ class AllureAdapter extends Extension
         }
         return $this->lifecycle;
     }
-    
+
     public function setLifecycle(Allure $lifecycle)
     {
         $this->lifecycle = $lifecycle;
