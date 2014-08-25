@@ -1,14 +1,14 @@
 # Allure Codeception Adapter
 
-This an official [Codeception](http://codeception.com) adapter for Allure Framework - a flexible, lightweight and multi-language framework for writing self-documenting tests.
+This is an official [Codeception](http://codeception.com) adapter for Allure Framework.
 
 ## What is this for?
-The main purpose of this adapter is to accumulate information about your tests and write it out to a set of XML files: one for each test class. Then you can use a standalone command line tool or a plugin for popular continuous integration systems to generate an HTML page showing your tests in a good form.
+The main purpose of this adapter is to accumulate information about your tests and write it out to a set of XML files: one for each test class. This adapter only generates XML files containing information about tests. See [wiki section](https://github.com/allure-framework/allure-core/wiki#generating-report) on how to generate report.
 
 ## Example project
 Example project is located at: https://github.com/allure-framework/allure-codeception-example
 
-## Usage
+## Installation and Usage
 In order to use this adapter you need to add a new dependency to your **composer.json** file:
 ```
 {
@@ -24,5 +24,5 @@ extensions:
     enabled: [Yandex\Allure\Adapter\AllureAdapter]
 ```
 
-## Advanced features
+## Main features
 See respective [PHPUnit](https://github.com/allure-framework/allure-phpunit#advanced-features) section.
