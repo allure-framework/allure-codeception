@@ -6,7 +6,7 @@ This is an official [Codeception](http://codeception.com) adapter for Allure Fra
 The main purpose of this adapter is to accumulate information about your tests and write it out to a set of XML files: one for each test class. This adapter only generates XML files containing information about tests. See [wiki section](https://github.com/allure-framework/allure-core/wiki#generating-report) on how to generate report.
 
 ## Example project
-Example project is located at: https://github.com/allure-framework/allure-codeception-example
+Example project is located at: https://github.com/allure-examples/allure-codeception-example
 
 ## Installation and Usage
 In order to use this adapter you need to add a new dependency to your **composer.json** file:
@@ -14,7 +14,7 @@ In order to use this adapter you need to add a new dependency to your **composer
 {
     "require": {
 	    "php": ">=5.4.0",
-	    "allure-framework/allure-codeception": "~1.0.0"
+	    "allure-framework/allure-codeception": "~1.1.0"
     }
 }
 ```
