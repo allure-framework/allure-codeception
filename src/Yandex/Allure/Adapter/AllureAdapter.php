@@ -54,6 +54,7 @@ class AllureAdapter extends Extension
     public function _initialize()
     {
         parent::_initialize();
+        Annotation\AnnotationProvider::registerAnnotationNamespaces();
         $outputDirectory = (isset($this->config[OUTPUT_DIRECTORY_PARAMETER])) ?
             $this->config[OUTPUT_DIRECTORY_PARAMETER] : DEFAULT_OUTPUT_DIRECTORY;
         $deletePreviousResults = (isset($this->config[DELETE_PREVIOUS_RESULTS_PARAMETER])) ?
