@@ -22,7 +22,6 @@ use Yandex\Allure\Adapter\Event\TestSuiteStartedEvent;
 use Yandex\Allure\Adapter\Model;
 use Yandex\Allure\Adapter\Support\Utils;
 
-const DEFAULT_OUTPUT_DIRECTORY = 'allure-report';
 const OUTPUT_DIRECTORY_PARAMETER = 'outputDirectory';
 const DELETE_PREVIOUS_RESULTS_PARAMETER = 'deletePreviousResults';
 
@@ -56,7 +55,7 @@ class AllureAdapter extends Extension
         parent::_initialize();
         Annotation\AnnotationProvider::registerAnnotationNamespaces();
         $outputDirectory = (isset($this->config[OUTPUT_DIRECTORY_PARAMETER])) ?
-            $this->config[OUTPUT_DIRECTORY_PARAMETER] : DEFAULT_OUTPUT_DIRECTORY;
+            $this->config[OUTPUT_DIRECTORY_PARAMETER] : self::getDefaultOutputDirectory();
         $deletePreviousResults = (isset($this->config[DELETE_PREVIOUS_RESULTS_PARAMETER])) ?
             $this->config[DELETE_PREVIOUS_RESULTS_PARAMETER] : false;
         if (!file_exists($outputDirectory)) {
@@ -75,6 +74,11 @@ class AllureAdapter extends Extension
         }
     }
 
+    private static function getDefaultOutputDirectory()
+    {
+        return 'tests' . DIRECTORY_SEPARATOR . 'allure-results';
+    }
+    
     public function suiteBefore(SuiteEvent $suiteEvent)
     {
         $suite = $suiteEvent->getSuite();
