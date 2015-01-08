@@ -2,6 +2,7 @@
 
 namespace Yandex\Allure\Adapter;
 
+use Codeception\Configuration;
 use Codeception\Event\StepEvent;
 use Codeception\Event\SuiteEvent;
 use Codeception\Event\TestEvent;
@@ -20,10 +21,10 @@ use Yandex\Allure\Adapter\Event\TestCaseStartedEvent;
 use Yandex\Allure\Adapter\Event\TestSuiteFinishedEvent;
 use Yandex\Allure\Adapter\Event\TestSuiteStartedEvent;
 use Yandex\Allure\Adapter\Model;
-use Yandex\Allure\Adapter\Support\Utils;
 
 const OUTPUT_DIRECTORY_PARAMETER = 'outputDirectory';
 const DELETE_PREVIOUS_RESULTS_PARAMETER = 'deletePreviousResults';
+const DEFAULT_RESULTS_DIRECTORY = 'allure-results';
 
 class AllureAdapter extends Extension
 {
@@ -76,7 +77,8 @@ class AllureAdapter extends Extension
 
     private static function getDefaultOutputDirectory()
     {
-        return 'tests' . DIRECTORY_SEPARATOR . 'allure-results';
+        // outputDir return value already contains directory separator
+        return Configuration::outputDir() . DEFAULT_RESULTS_DIRECTORY;
     }
     
     public function suiteBefore(SuiteEvent $suiteEvent)
