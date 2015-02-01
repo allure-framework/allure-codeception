@@ -8,6 +8,9 @@ use Codeception\Event\SuiteEvent;
 use Codeception\Event\TestEvent;
 use Codeception\Events;
 use Codeception\Platform\Extension;
+use Codeception\Exception\Configuration as ConfigurationException;
+use Symfony\Component\Finder\Finder;
+use Symfony\Component\Filesystem\Filesystem;
 use Yandex\Allure\Adapter\Annotation;
 use Yandex\Allure\Adapter\Event\StepFailedEvent;
 use Yandex\Allure\Adapter\Event\StepFinishedEvent;
@@ -25,10 +28,10 @@ use Yandex\Allure\Adapter\Model;
 const OUTPUT_DIRECTORY_PARAMETER = 'outputDirectory';
 const DELETE_PREVIOUS_RESULTS_PARAMETER = 'deletePreviousResults';
 const DEFAULT_RESULTS_DIRECTORY = 'allure-results';
+const DEFAULT_REPORT_DIRECTORY = 'allure-report';
 
 class AllureAdapter extends Extension
 {
-
     //NOTE: here we implicitly assume that PHP runs in single-threaded mode
     private $uuid;
 
@@ -55,30 +58,97 @@ class AllureAdapter extends Extension
     {
         parent::_initialize();
         Annotation\AnnotationProvider::registerAnnotationNamespaces();
-        $outputDirectory = (isset($this->config[OUTPUT_DIRECTORY_PARAMETER])) ?
-            $this->config[OUTPUT_DIRECTORY_PARAMETER] : self::getDefaultOutputDirectory();
-        $deletePreviousResults = (isset($this->config[DELETE_PREVIOUS_RESULTS_PARAMETER])) ?
-            $this->config[DELETE_PREVIOUS_RESULTS_PARAMETER] : false;
-        if (!file_exists($outputDirectory)) {
-            mkdir($outputDirectory, 0755, true);
-        }
-        if ($deletePreviousResults) {
-            $files = glob($outputDirectory . DIRECTORY_SEPARATOR . '{,.}*', GLOB_BRACE);
-            foreach ($files as $file) {
-                if (is_file($file)) {
-                    unlink($file);
-                }
-            }
-        }
+        $outputDirectory = $this->getOutputDirectory();
+        $deletePreviousResults =
+            $this->tryGetOption(DELETE_PREVIOUS_RESULTS_PARAMETER, false);
+        $this->prepareOutputDirectory($outputDirectory, $deletePreviousResults);
         if (is_null(Model\Provider::getOutputDirectory())) {
             Model\Provider::setOutputDirectory($outputDirectory);
         }
     }
 
-    private static function getDefaultOutputDirectory()
+    /**
+     * Retrieves option or returns default value.
+     *
+     * @param string $optionKey    Configuration option key.
+     * @param mixed  $defaultValue Value to return in case option isn't set.
+     *
+     * @return mixed Option value.
+     * @since 0.1.0
+     */
+    private function tryGetOption($optionKey, $defaultValue = null)
     {
-        // outputDir return value already contains directory separator
-        return Configuration::outputDir() . DEFAULT_RESULTS_DIRECTORY;
+        if (array_key_exists($optionKey, $this->config)) {
+            return $this->config[$optionKey];
+        } 
+        return $defaultValue;
+    }
+
+    /** @noinspection PhpUnusedPrivateMethodInspection */
+    /**
+     * Retrieves option or dies.
+     *
+     * @param string $optionKey Configuration option key.
+     *
+     * @throws ConfigurationException Thrown if option can't be retrieved.
+     *
+     * @return mixed Option value.
+     * @since 0.1.0
+     */
+    private function getOption($optionKey)
+    {
+        if (!array_key_exists($optionKey, $this->config)) {
+            $template = '%s: Couldn\'t find required configuration option `%s`';
+            $message = sprintf($template, __CLASS__, $optionKey);
+            throw new ConfigurationException($message);
+        }
+        return $this->config[$optionKey];
+    }
+
+    /**
+     * Returns output directory.
+     *
+     * @throws ConfigurationException Thrown if there is Codeception-wide
+     *                                problem with output directory
+     *                                configuration.
+     *
+     * @return string Absolute path to output directory.
+     * @since 0.1.0
+     */
+    private function getOutputDirectory()
+    {
+        $outputDirectory = $this->tryGetOption(
+            OUTPUT_DIRECTORY_PARAMETER,
+            DEFAULT_RESULTS_DIRECTORY
+        );
+        $filesystem = new Filesystem;
+        if (!$filesystem->isAbsolutePath($outputDirectory)) {
+            $outputDirectory = Configuration::outputDir() . $outputDirectory;
+        }
+        return $outputDirectory;
+    }
+
+    /**
+     * Creates output directory (if it hasn't been created yet) and cleans it
+     * up (if corresponding argument has been set to true).
+     *
+     * @param string $outputDirectory
+     * @param bool   $deletePreviousResults Whether to delete previous results
+     *                                      or keep 'em.
+     *
+     * @since 0.1.0
+     */
+    private function prepareOutputDirectory(
+        $outputDirectory,
+        $deletePreviousResults = false
+    ) {
+        $filesystem = new Filesystem;
+        $filesystem->mkdir($outputDirectory, 0775);
+        if ($deletePreviousResults) {
+            $finder = new Finder;
+            $files = $finder->files()->in($outputDirectory)->name('*.xml');
+            $filesystem->remove($files);
+        }
     }
     
     public function suiteBefore(SuiteEvent $suiteEvent)
