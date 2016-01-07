@@ -50,14 +50,36 @@ class AllureAdapter extends Extension
         Events::TEST_SKIPPED => 'testSkipped',
         Events::TEST_END => 'testEnd',
         Events::STEP_BEFORE => 'stepBefore',
-        Events::STEP_FAIL => 'stepFail',
         Events::STEP_AFTER => 'stepAfter'
     ];
 
-    public function _initialize()
+    /**
+     * Annotations that should be ignored by the annotaions parser (especially PHPUnit annotations).
+     * 
+     * @var array
+     */
+    private $ignoredAnnotations = [
+        'after', 'afterClass', 'backupGlobals', 'backupStaticAttributes', 'before', 'beforeClass',
+        'codeCoverageIgnore', 'codeCoverageIgnoreStart', 'codeCoverageIgnoreEnd', 'covers',
+        'coversDefaultClass', 'coversNothing', 'dataProvider', 'depends', 'expectedException',
+        'expectedExceptionCode', 'expectedExceptionMessage', 'group', 'large', 'medium',
+        'preserveGlobalState', 'requires', 'runTestsInSeparateProcesses', 'runInSeparateProcess',
+        'small', 'test', 'testdox', 'ticket', 'uses',
+    ];
+
+    /**
+     * Extra annotations to ignore in addition to standard PHPUnit annotations.
+     * 
+     * @param array $ignoredAnnotations
+     */
+    public function _initialize(array $ignoredAnnotations = [])
     {
         parent::_initialize();
         Annotation\AnnotationProvider::registerAnnotationNamespaces();
+        // Add standard PHPUnit annotations
+        Annotation\AnnotationProvider::addIgnoredAnnotations($this->ignoredAnnotations);
+        // Add custom ignored annotations
+        Annotation\AnnotationProvider::addIgnoredAnnotations($ignoredAnnotations);
         $outputDirectory = $this->getOutputDirectory();
         $deletePreviousResults =
             $this->tryGetOption(DELETE_PREVIOUS_RESULTS_PARAMETER, false);
@@ -156,8 +178,10 @@ class AllureAdapter extends Extension
         $suite = $suiteEvent->getSuite();
         $suiteName = $suite->getName();
         $event = new TestSuiteStartedEvent($suiteName);
-        if (class_exists($suiteName)){
-            $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getClassAnnotations(get_class($suite)));
+        if (class_exists($suiteName, false)) {
+            $annotationManager = new Annotation\AnnotationManager(
+                Annotation\AnnotationProvider::getClassAnnotations($suiteName)
+            );
             $annotationManager->updateTestSuiteEvent($event);
         }
         $this->uuid = $event->getUuid();
@@ -218,10 +242,6 @@ class AllureAdapter extends Extension
         $this->getLifecycle()->fire(new StepFinishedEvent());
     }
 
-    public function stepFail()
-    {
-        $this->getLifecycle()->fire(new StepFailedEvent());
-    }
 
     /**
      * @return Allure

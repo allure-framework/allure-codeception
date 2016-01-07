@@ -17,7 +17,7 @@
     },
     "require": {
 	    "php": ">=5.4.0",
-        "codeception/codeception": "~2.0.0",
+        "codeception/codeception": "~2.1.0",
         "allure-framework/allure-php-api": "~1.1.0",
         "symfony/filesystem": "~2.6",
         "symfony/finder": "~2.6"
