@@ -6,6 +6,7 @@ use Codeception\Configuration;
 use Codeception\Event\StepEvent;
 use Codeception\Event\SuiteEvent;
 use Codeception\Event\TestEvent;
+use Codeception\Event\FailEvent;
 use Codeception\Events;
 use Codeception\Platform\Extension;
 use Codeception\Exception\Configuration as ConfigurationException;
