@@ -206,24 +206,48 @@ class AllureAdapter extends Extension
         $this->getLifecycle()->fire($event);
     }
 
-    public function testError()
+    /**
+     * @param FailEvent $failEvent
+     */
+    public function testError(FailEvent $failEvent)
     {
-        $this->getLifecycle()->fire(new TestCaseBrokenEvent());
+        $event = new TestCaseBrokenEvent();
+        $e = $failEvent->getFail();
+        $message = $e->getMessage();
+        $this->getLifecycle()->fire($event->withException($e)->withMessage($message));
     }
 
-    public function testFail()
+    /**
+     * @param FailEvent $failEvent
+     */
+    public function testFail(FailEvent $failEvent)
     {
-        $this->getLifecycle()->fire(new TestCaseFailedEvent());
+        $event = new TestCaseFailedEvent();
+        $e = $failEvent->getFail();
+        $message = $e->getMessage();
+        $this->getLifecycle()->fire($event->withException($e)->withMessage($message));
     }
 
-    public function testIncomplete()
+    /**
+     * @param FailEvent $failEvent
+     */
+    public function testIncomplete(FailEvent $failEvent)
     {
-        $this->getLifecycle()->fire(new TestCasePendingEvent());
+        $event = new TestCasePendingEvent();
+        $e = $failEvent->getFail();
+        $message = $e->getMessage();
+        $this->getLifecycle()->fire($event->withException($e)->withMessage($message));
     }
 
-    public function testSkipped()
+    /**
+     * @param FailEvent $failEvent
+     */
+    public function testSkipped(FailEvent $failEvent)
     {
-        $this->getLifecycle()->fire(new TestCaseCanceledEvent());
+        $event = new TestCaseCanceledEvent();
+        $e = $failEvent->getFail();
+        $message = $e->getMessage();
+        $this->getLifecycle()->fire($event->withException($e)->withMessage($message));
     }
 
     public function testEnd()
