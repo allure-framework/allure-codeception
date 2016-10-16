@@ -9,7 +9,7 @@ use Codeception\Event\TestEvent;
 use Codeception\Event\FailEvent;
 use Codeception\Events;
 use Codeception\Platform\Extension;
-use Codeception\Exception\Configuration as ConfigurationException;
+use Codeception\Exception\ConfigurationException;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Filesystem\Filesystem;
 use Yandex\Allure\Adapter\Annotation;
