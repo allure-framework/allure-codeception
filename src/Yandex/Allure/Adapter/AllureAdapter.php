@@ -200,16 +200,11 @@ class AllureAdapter extends Extension
         $test = $testEvent->getTest();
         $testName = $test->getName();
         $testClass = get_class($test->getTestClass());
-
         $event = new TestCaseStartedEvent($this->uuid, $testName);
-
         if (class_exists($testClass, false)) {
-            $annotationManager = new Annotation\AnnotationManager(
-                Annotation\AnnotationProvider::getClassAnnotations($testClass)
-            );
+            $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getClassAnnotations($testClass));
             $annotationManager->updateTestCaseEvent($event);
         }
-
         $this->getLifecycle()->fire($event);
     }
     
