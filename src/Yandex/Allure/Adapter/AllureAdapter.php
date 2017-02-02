@@ -44,6 +44,7 @@ class AllureAdapter extends Extension
     static $events = [
         Events::SUITE_BEFORE => 'suiteBefore',
         Events::SUITE_AFTER => 'suiteAfter',
+        Events::TEST_BEFORE => 'testBefore',
         Events::TEST_START => 'testStart',
         Events::TEST_FAIL => 'testFail',
         Events::TEST_ERROR => 'testError',
@@ -194,15 +195,27 @@ class AllureAdapter extends Extension
         $this->getLifecycle()->fire(new TestSuiteFinishedEvent($this->uuid));
     }
 
+    public function testBefore(TestEvent $testEvent)
+    {
+        $test = $testEvent->getTest();
+        $testName = $test->getName();
+        $testClass = get_class($test->getTestClass());
+        $event = new TestCaseStartedEvent($this->uuid, $testName);
+        if (class_exists($testClass, false)) {
+            $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getClassAnnotations($testClass));
+            $annotationManager->updateTestCaseEvent($event);
+        }
+        $this->getLifecycle()->fire($event);
+    }
+    
     public function testStart(TestEvent $testEvent)
     {
         $test = $testEvent->getTest();
         $testName = $test->getName();
-        $testClassName = $test->getName(false);
-        $className = get_class($test);
+        $className = get_class($test->getTestClass());
         $event = new TestCaseStartedEvent($this->uuid, $testName);
-        if (method_exists($className, $testClassName)){
-            $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getMethodAnnotations($className, $testClassName));
+        if (method_exists($className, $testName)){
+            $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getMethodAnnotations($className, $testName));
             $annotationManager->updateTestCaseEvent($event);
         }
         $this->getLifecycle()->fire($event);
