@@ -10,6 +10,7 @@ use Codeception\Event\FailEvent;
 use Codeception\Events;
 use Codeception\Platform\Extension;
 use Codeception\Exception\ConfigurationException;
+use Codeception\Test\Cest;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Filesystem\Filesystem;
 use Yandex\Allure\Adapter\Annotation;
@@ -199,7 +200,9 @@ class AllureAdapter extends Extension
     {
         $test = $testEvent->getTest();
         $testName = $test->getName();
-        $testClass = get_class($test->getTestClass());
+        $testClass = $test instanceof Cest
+            ? get_class($test->getTestClass())
+            : null;
         $event = new TestCaseStartedEvent($this->uuid, $testName);
         if (class_exists($testClass, false)) {
             $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getClassAnnotations($testClass));
@@ -212,7 +215,9 @@ class AllureAdapter extends Extension
     {
         $test = $testEvent->getTest();
         $testName = $test->getName();
-        $className = get_class($test->getTestClass());
+        $className = $test instanceof Cest
+            ? get_class($test->getTestClass())
+            : $testName;
         $event = new TestCaseStartedEvent($this->uuid, $testName);
         if (method_exists($className, $testName)){
             $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getMethodAnnotations($className, $testName));
