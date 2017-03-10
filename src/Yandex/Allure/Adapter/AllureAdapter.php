@@ -7,6 +7,7 @@ use Codeception\Event\StepEvent;
 use Codeception\Event\SuiteEvent;
 use Codeception\Event\TestEvent;
 use Codeception\Event\FailEvent;
+use Codeception\Test\Cest;
 use Codeception\Events;
 use Codeception\Platform\Extension;
 use Codeception\Exception\ConfigurationException;
@@ -199,7 +200,9 @@ class AllureAdapter extends Extension
     {
         $test = $testEvent->getTest();
         $testName = $test->getName();
-        $testClass = get_class($test->getTestClass());
+        $testClass = $test instanceof Cest
+            ? get_class($test->getTestClass())
+            : get_class($test);
         $event = new TestCaseStartedEvent($this->uuid, $testName);
         if (class_exists($testClass, false)) {
             $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getClassAnnotations($testClass));
@@ -211,8 +214,10 @@ class AllureAdapter extends Extension
     public function testStart(TestEvent $testEvent)
     {
         $test = $testEvent->getTest();
-        $testName = $test->getName();
-        $className = get_class($test->getTestClass());
+        $testName = $test->getName(false);
+        $className = $test instanceof Cest
+            ? get_class($test->getTestClass())
+            : get_class($test);
         $event = new TestCaseStartedEvent($this->uuid, $testName);
         if (method_exists($className, $testName)){
             $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getMethodAnnotations($className, $testName));
