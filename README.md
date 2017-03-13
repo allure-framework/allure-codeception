@@ -27,6 +27,7 @@ extensions:
         Yandex\Allure\Adapter\AllureAdapter:
             deletePreviousResults: false
             outputDirectory: allure-results
+            ignoredAnnotations: ['skip', 'dataprovider']
 ```
 
 `deletePreviousResults` will clear all `.xml` files from output directory (this

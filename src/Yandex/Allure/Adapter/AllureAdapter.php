@@ -34,6 +34,13 @@ const DEFAULT_REPORT_DIRECTORY = 'allure-report';
 
 class AllureAdapter extends Extension
 {
+    /**
+     * Ignored annotation config param name
+     *
+     * @const string
+     */
+    const IGNORED_ANNOTATIONS = 'ignoredAnnotations';
+
     //NOTE: here we implicitly assume that PHP runs in single-threaded mode
     private $uuid;
 
@@ -79,10 +86,12 @@ class AllureAdapter extends Extension
     {
         parent::_initialize();
         Annotation\AnnotationProvider::registerAnnotationNamespaces();
-        // Add standard PHPUnit annotations
-        Annotation\AnnotationProvider::addIgnoredAnnotations($this->ignoredAnnotations);
-        // Add custom ignored annotations
-        Annotation\AnnotationProvider::addIgnoredAnnotations($ignoredAnnotations);
+        // Add standard PHPUnit, custom and config annotations to ignore
+        Annotation\AnnotationProvider::addIgnoredAnnotations(array_merge(
+            $this->tryGetOption(self::IGNORED_ANNOTATIONS, []),
+            $ignoredAnnotations,
+            $this->ignoredAnnotations
+        ));
         $outputDirectory = $this->getOutputDirectory();
         $deletePreviousResults =
             $this->tryGetOption(DELETE_PREVIOUS_RESULTS_PARAMETER, false);
