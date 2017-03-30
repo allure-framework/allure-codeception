@@ -29,6 +29,7 @@ use Yandex\Allure\Adapter\Model;
 
 const OUTPUT_DIRECTORY_PARAMETER = 'outputDirectory';
 const DELETE_PREVIOUS_RESULTS_PARAMETER = 'deletePreviousResults';
+const IGNORED_ANNOTATION_PARAMETER = 'ignoredAnnotations';
 const DEFAULT_RESULTS_DIRECTORY = 'allure-results';
 const DEFAULT_REPORT_DIRECTORY = 'allure-report';
 
@@ -72,16 +73,16 @@ class AllureAdapter extends Extension
 
     /**
      * Extra annotations to ignore in addition to standard PHPUnit annotations.
-     * 
-     * @param array $ignoredAnnotations
      */
-    public function _initialize(array $ignoredAnnotations = [])
+    public function _initialize()
     {
         parent::_initialize();
         Annotation\AnnotationProvider::registerAnnotationNamespaces();
         // Add standard PHPUnit annotations
         Annotation\AnnotationProvider::addIgnoredAnnotations($this->ignoredAnnotations);
         // Add custom ignored annotations
+        $ignoredAnnotations =
+            $this->tryGetOption(IGNORED_ANNOTATION_PARAMETER, []);
         Annotation\AnnotationProvider::addIgnoredAnnotations($ignoredAnnotations);
         $outputDirectory = $this->getOutputDirectory();
         $deletePreviousResults =
