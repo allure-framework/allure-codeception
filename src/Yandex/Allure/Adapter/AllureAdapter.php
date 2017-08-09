@@ -346,11 +346,13 @@ class AllureAdapter extends Extension
                         $annotations[get_class($feature)] = $feature;
                     } else if ($output[1] == 'Title') {
                         $title = new \Yandex\Allure\Adapter\Annotation\Title();
-                        $title->value = $output[2];
+                        $title_content = str_replace('"', '', $output[2]);
+                        $title->value = $title_content;
                         $annotations[get_class($title)] = $title;
                     } else if ($output[1] == 'Description') {
                         $description = new \Yandex\Allure\Adapter\Annotation\Description();
-                        $description->value = $output[2];
+                        $description_content = str_replace('"', '', $output[2]);
+                        $description->value = $description_content;
                         $annotations[get_class($description)] = $description;
                     } else if ($output[1] == 'Stories') {
                         $stories = $this->splitAnnotationContent($output[2]);
