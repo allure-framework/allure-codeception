@@ -7,7 +7,6 @@ use Codeception\Event\StepEvent;
 use Codeception\Event\SuiteEvent;
 use Codeception\Event\TestEvent;
 use Codeception\Event\FailEvent;
-use Codeception\Test\Cest;
 use Codeception\Events;
 use Codeception\Platform\Extension;
 use Codeception\Exception\ConfigurationException;
@@ -29,7 +28,6 @@ use Yandex\Allure\Adapter\Model;
 
 const OUTPUT_DIRECTORY_PARAMETER = 'outputDirectory';
 const DELETE_PREVIOUS_RESULTS_PARAMETER = 'deletePreviousResults';
-const IGNORED_ANNOTATION_PARAMETER = 'ignoredAnnotations';
 const DEFAULT_RESULTS_DIRECTORY = 'allure-results';
 const DEFAULT_REPORT_DIRECTORY = 'allure-report';
 const INITIALIZED_PARAMETER = '_initialized';
@@ -74,16 +72,16 @@ class AllureAdapter extends Extension
 
     /**
      * Extra annotations to ignore in addition to standard PHPUnit annotations.
+     * 
+     * @param array $ignoredAnnotations
      */
-    public function _initialize()
+    public function _initialize(array $ignoredAnnotations = [])
     {
         parent::_initialize();
         Annotation\AnnotationProvider::registerAnnotationNamespaces();
         // Add standard PHPUnit annotations
         Annotation\AnnotationProvider::addIgnoredAnnotations($this->ignoredAnnotations);
         // Add custom ignored annotations
-        $ignoredAnnotations =
-            $this->tryGetOption(IGNORED_ANNOTATION_PARAMETER, []);
         Annotation\AnnotationProvider::addIgnoredAnnotations($ignoredAnnotations);
         $outputDirectory = $this->getOutputDirectory();
         $deletePreviousResults =
@@ -223,29 +221,43 @@ class AllureAdapter extends Extension
     {
         $test = $testEvent->getTest();
         $testName = $test->getName();
-        $testClass = $test instanceof Cest
-            ? get_class($test->getTestClass())
-            : get_class($test);
         $event = new TestCaseStartedEvent($this->uuid, $testName);
-        if (class_exists($testClass, false)) {
-            $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getClassAnnotations($testClass));
-            $annotationManager->updateTestCaseEvent($event);
+        if ($test instanceof \Codeception\Test\Cest) {
+            $testClass = get_class($test->getTestClass());
+            if (class_exists($testClass, false)) {
+                $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getClassAnnotations($testClass));
+                $annotationManager->updateTestCaseEvent($event);
+            }
+        } else if ($test instanceof \Codeception\Test\Cept) {
+            $annotations = $this->getCeptAnnotations($test);
+            if (count($annotations) > 0) {
+                $annotationManager = new Annotation\AnnotationManager($annotations);
+                $annotationManager->updateTestCaseEvent($event);
+            }
         }
+        
         $this->getLifecycle()->fire($event);
     }
     
     public function testStart(TestEvent $testEvent)
     {
         $test = $testEvent->getTest();
-        $testName = $test->getName(false);
-        $className = $test instanceof Cest
-            ? get_class($test->getTestClass())
-            : get_class($test);
+        $testName = $test->getName();
         $event = new TestCaseStartedEvent($this->uuid, $testName);
-        if (method_exists($className, $testName)){
-            $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getMethodAnnotations($className, $testName));
-            $annotationManager->updateTestCaseEvent($event);
+        if ($test instanceof \Codeception\Test\Cest) {
+            $className = get_class($test->getTestClass());
+            if (method_exists($className, $testName)){
+                $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getMethodAnnotations($className, $testName));
+                $annotationManager->updateTestCaseEvent($event);
+            }
+        } else if ($test instanceof \Codeception\Test\Cept) {
+            $annotations = $this->getCeptAnnotations($test);
+            if (count($annotations) > 0) {
+                $annotationManager = new Annotation\AnnotationManager($annotations);
+                $annotationManager->updateTestCaseEvent($event);
+            }
         }
+        
         $this->getLifecycle()->fire($event);
     }
 
@@ -324,6 +336,85 @@ class AllureAdapter extends Extension
     public function setLifecycle(Allure $lifecycle)
     {
         $this->lifecycle = $lifecycle;
+    }
+
+    /**
+     *
+     * @param \Codeception\TestInterface $test
+     * @return array
+     */
+    private function getCeptAnnotations($test)
+    {
+        $tokens = token_get_all($test->getSourceCode());
+        $comments = array();
+        $annotations = [];
+        foreach($tokens as $token) {
+            if($token[0] == T_DOC_COMMENT || $token[0] == T_COMMENT) {
+                $comments[] = $token[1];
+            }
+        }
+        foreach($comments as $comment) {
+            $lines = preg_split ('/$\R?^/m', $comment);
+            foreach($lines as $line) {
+                $output = [];
+                if (preg_match('/\*\s\@(.*)\((.*)\)/', $line, $output) > 0) {
+                    \Codeception\Util\Debug::debug($output);
+                    if ($output[1] == "Features") {
+                        $feature = new \Yandex\Allure\Adapter\Annotation\Features();
+                        $features = $this->splitAnnotationContent($output[2]);
+                        foreach($features as $featureName) {
+                            $feature->featureNames[] = $featureName;
+                        }
+                        $annotations[get_class($feature)] = $feature;
+                    } else if ($output[1] == 'Title') {
+                        $title = new \Yandex\Allure\Adapter\Annotation\Title();
+                        $title_content = str_replace('"', '', $output[2]);
+                        $title->value = $title_content;
+                        $annotations[get_class($title)] = $title;
+                    } else if ($output[1] == 'Description') {
+                        $description = new \Yandex\Allure\Adapter\Annotation\Description();
+                        $description_content = str_replace('"', '', $output[2]);
+                        $description->value = $description_content;
+                        $annotations[get_class($description)] = $description;
+                    } else if ($output[1] == 'Stories') {
+                        $stories = $this->splitAnnotationContent($output[2]);
+                        $story = new \Yandex\Allure\Adapter\Annotation\Stories();
+                        foreach($stories as $storyName) {
+                            $story->stories[] = $storyName;
+                        }
+                        $annotations[get_class($story)] = $story;
+                    } else if ($output[1] == 'Issues') {
+                        $issues = $this->splitAnnotationContent($output[2]);
+                        $issue = new \Yandex\Allure\Adapter\Annotation\Stories();
+                        foreach($issues as $issueName) {
+                            $issues->issuesKeys[] = $issueName;
+                        }
+                        $annotations[get_class($issue)] = $issue;
+                    } else {
+                        \Codeception\Util\Debug::debug("Tag not detected: ".$output[1]);
+                    }
+                }
+            }
+        }
+        return $annotations;
+    }
+
+    /**
+     *
+     * @param string $string
+     * @return array
+     */
+    private function splitAnnotationContent($string)
+    {
+        $parts = [];
+        $detected = str_replace('{', '', $string);
+        $detected = str_replace('}', '', $detected);
+        $detected = str_replace('"', '', $detected);
+        $parts = explode(',', $detected);
+        if (count($parts) == 0 && count($detected) > 0) {
+            $parts[] = $detected;
+        }
+        return $parts;
     }
 
 }
