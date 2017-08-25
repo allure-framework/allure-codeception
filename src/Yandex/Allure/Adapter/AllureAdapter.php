@@ -290,7 +290,7 @@ class AllureAdapter extends Extension
 
     public function stepBefore(StepEvent $stepEvent)
     {
-        $stepAction = $stepEvent->getStep()->getAction();
+        $stepAction = $stepEvent->getStep()->__toString();
         $this->getLifecycle()->fire(new StepStartedEvent($stepAction));
     }
 
