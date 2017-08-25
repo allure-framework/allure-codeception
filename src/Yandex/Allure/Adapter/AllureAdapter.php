@@ -30,6 +30,7 @@ const OUTPUT_DIRECTORY_PARAMETER = 'outputDirectory';
 const DELETE_PREVIOUS_RESULTS_PARAMETER = 'deletePreviousResults';
 const DEFAULT_RESULTS_DIRECTORY = 'allure-results';
 const DEFAULT_REPORT_DIRECTORY = 'allure-report';
+const INITIALIZED_PARAMETER = '_initialized';
 
 class AllureAdapter extends Extension
 {
@@ -89,6 +90,26 @@ class AllureAdapter extends Extension
         if (is_null(Model\Provider::getOutputDirectory())) {
             Model\Provider::setOutputDirectory($outputDirectory);
         }
+        $this->setOption(INITIALIZED_PARAMETER, true);
+    }
+
+    /**
+     * Sets runtime option which will be live
+     *
+     * @param string $key
+     * @param mixed $value
+     */
+    private function setOption($key, $value)
+    {
+        $config = [];
+        $cursor = &$config;
+        $path = ['extensions', 'config', get_class()];
+        foreach ($path as $segment) {
+            $cursor[$segment] = [];
+            $cursor = &$cursor[$segment];
+        }
+        $cursor[$key] = $this->config[$key] = $value;
+        Configuration::append($config);
     }
 
     /**
@@ -168,7 +189,8 @@ class AllureAdapter extends Extension
     ) {
         $filesystem = new Filesystem;
         $filesystem->mkdir($outputDirectory, 0775);
-        if ($deletePreviousResults) {
+        $initialized = $this->tryGetOption(INITIALIZED_PARAMETER, false);
+        if ($deletePreviousResults && !$initialized) {
             $finder = new Finder;
             $files = $finder->files()->in($outputDirectory)->name('*.xml');
             $filesystem->remove($files);
@@ -316,8 +338,6 @@ class AllureAdapter extends Extension
         $this->lifecycle = $lifecycle;
     }
 
-    
-
     /**
      *
      * @param \Codeception\TestInterface $test
@@ -395,4 +415,5 @@ class AllureAdapter extends Extension
         }
         return $parts;
     }
+
 }
