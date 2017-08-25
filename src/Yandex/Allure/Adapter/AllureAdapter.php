@@ -316,6 +316,8 @@ class AllureAdapter extends Extension
         $this->lifecycle = $lifecycle;
     }
 
+    
+
     /**
      *
      * @param \Codeception\TestInterface $test
@@ -336,7 +338,6 @@ class AllureAdapter extends Extension
             foreach($lines as $line) {
                 $output = [];
                 if (preg_match('/\*\s\@(.*)\((.*)\)/', $line, $output) > 0) {
-                    \Codeception\Util\Debug::debug($output);
                     if ($output[1] == "Features") {
                         $feature = new \Yandex\Allure\Adapter\Annotation\Features();
                         $features = $this->splitAnnotationContent($output[2]);
@@ -363,9 +364,9 @@ class AllureAdapter extends Extension
                         $annotations[get_class($story)] = $story;
                     } else if ($output[1] == 'Issues') {
                         $issues = $this->splitAnnotationContent($output[2]);
-                        $issue = new \Yandex\Allure\Adapter\Annotation\Stories();
+                        $issue = new \Yandex\Allure\Adapter\Annotation\Issues();
                         foreach($issues as $issueName) {
-                            $issues->issuesKeys[] = $issueName;
+                            $issue->issueKeys[] = $issueName;
                         }
                         $annotations[get_class($issue)] = $issue;
                     } else {
@@ -394,5 +395,4 @@ class AllureAdapter extends Extension
         }
         return $parts;
     }
-
 }
