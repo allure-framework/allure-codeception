@@ -27,6 +27,9 @@ extensions:
         Yandex\Allure\Adapter\AllureAdapter:
             deletePreviousResults: false
             outputDirectory: allure-results
+            ignoredAnnotations:
+                - env
+                - dataprovider
 ```
 
 `deletePreviousResults` will clear all `.xml` files from output directory (this
@@ -36,6 +39,8 @@ behavior may change to complete cleanup later). It is set to `false` by default.
 relatively to Codeception output directory (also known as `paths: log` in
 codeception.yml) unless you specify an absolute path. You can traverse up using
 `..` as usual. `outputDirectory` defaults to `allure-results`.
+
+`ignoredAnnotations` is used to define extra custom annotations to ignore. It is empty by default.
 
 To generate report from your favourite terminal,
 [install](https://github.com/allure-framework/allure-cli#installation)
