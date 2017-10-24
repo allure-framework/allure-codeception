@@ -25,6 +25,7 @@ use Yandex\Allure\Adapter\Event\TestCaseStartedEvent;
 use Yandex\Allure\Adapter\Event\TestSuiteFinishedEvent;
 use Yandex\Allure\Adapter\Event\TestSuiteStartedEvent;
 use Yandex\Allure\Adapter\Model;
+use Yandex\Allure\Adapter\Model\ParameterKind;
 
 const OUTPUT_DIRECTORY_PARAMETER = 'outputDirectory';
 const DELETE_PREVIOUS_RESULTS_PARAMETER = 'deletePreviousResults';
@@ -46,7 +47,6 @@ class AllureAdapter extends Extension
     static $events = [
         Events::SUITE_BEFORE => 'suiteBefore',
         Events::SUITE_AFTER => 'suiteAfter',
-        Events::TEST_BEFORE => 'testBefore',
         Events::TEST_START => 'testStart',
         Events::TEST_FAIL => 'testFail',
         Events::TEST_ERROR => 'testError',
@@ -219,37 +219,37 @@ class AllureAdapter extends Extension
         $this->getLifecycle()->fire(new TestSuiteFinishedEvent($this->uuid));
     }
 
-    public function testBefore(TestEvent $testEvent)
-    {
-        $test = $testEvent->getTest();
+    private $testInvocations = array();
+    private function buildTestName($test) {
         $testName = $test->getName();
-        $event = new TestCaseStartedEvent($this->uuid, $testName);
         if ($test instanceof \Codeception\Test\Cest) {
-            $testClass = get_class($test->getTestClass());
-            if (class_exists($testClass, false)) {
-                $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getClassAnnotations($testClass));
-                $annotationManager->updateTestCaseEvent($event);
+            $testFullName = get_class($test->getTestClass()) . '::' . $testName;
+            if(isset($this->testInvocations[$testFullName])) {
+                $this->testInvocations[$testFullName]++;
+            } else {
+                $this->testInvocations[$testFullName] = 0;
             }
-        } else if ($test instanceof \Codeception\Test\Cept) {
-            $annotations = $this->getCeptAnnotations($test);
-            if (count($annotations) > 0) {
-                $annotationManager = new Annotation\AnnotationManager($annotations);
-                $annotationManager->updateTestCaseEvent($event);
+            $currentExample = $test->getMetadata()->getCurrent();
+            if ($currentExample && isset($currentExample['example']) ) {
+                $testName .= ' with data set #' . $this->testInvocations[$testFullName];
             }
         }
-        
-        $this->getLifecycle()->fire($event);
+        return $testName;
     }
     
     public function testStart(TestEvent $testEvent)
     {
         $test = $testEvent->getTest();
-        $testName = $test->getName();
-        $event = new TestCaseStartedEvent($this->uuid, $testName);
+        $testName = $this->buildTestName($test);
+        $event = new TestCaseStartedEvent($this->uuid, $testName);        
         if ($test instanceof \Codeception\Test\Cest) {
             $className = get_class($test->getTestClass());
-            if (method_exists($className, $testName)){
-                $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getMethodAnnotations($className, $testName));
+            if (class_exists($className, false)) {
+                $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getClassAnnotations($className));
+                $annotationManager->updateTestCaseEvent($event);
+            }
+            if (method_exists($className, $test->getName())){
+                $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getMethodAnnotations($className, $test->getName()));
                 $annotationManager->updateTestCaseEvent($event);
             }
         } else if ($test instanceof \Codeception\Test\Cept) {
@@ -258,9 +258,45 @@ class AllureAdapter extends Extension
                 $annotationManager = new Annotation\AnnotationManager($annotations);
                 $annotationManager->updateTestCaseEvent($event);
             }
+        } else if ($test instanceof \PHPUnit_Framework_TestCase) {
+            $methodName = $this->methodName = $test->getName(false);
+            $className = get_class($test);
+            if (class_exists($className, false)) {
+                $annotationManager = new Annotation\AnnotationManager(
+                    Annotation\AnnotationProvider::getClassAnnotations($className)
+                );
+                $annotationManager->updateTestCaseEvent($event);
+            }
+            if (method_exists($test, $methodName)) {
+                $annotationManager = new Annotation\AnnotationManager(
+                    Annotation\AnnotationProvider::getMethodAnnotations(get_class($test), $methodName)
+                );
+                $annotationManager->updateTestCaseEvent($event);
+            }
         }
-        
         $this->getLifecycle()->fire($event);
+
+        if ($test instanceof \Codeception\Test\Cest) {
+            $currentExample = $test->getMetadata()->getCurrent();
+            if ($currentExample && isset($currentExample['example']) ) {
+                foreach ($currentExample['example'] as $name => $param) {
+                    $paramEvent = new Event\AddParameterEvent($name, $param, ParameterKind::ARGUMENT);
+                    $this->getLifecycle()->fire($paramEvent);
+                }
+            }
+        } else if ($test instanceof \PHPUnit_Framework_TestCase) {
+            if ($test->usesDataProvider()) {
+                $method = new \ReflectionMethod(get_class($test), 'getProvidedData');
+                $method->setAccessible(true);
+                $testMethod = new \ReflectionMethod(get_class($test), $test->getName(false));
+                $paramNames = $testMethod->getParameters();
+                foreach ($method->invoke($test) as $key => $param) {
+                    $paramName = array_shift($paramNames);
+                    $paramEvent = new Event\AddParameterEvent(is_null($paramName) ? $key : $paramName->getName() , $param, ParameterKind::ARGUMENT);
+                    $this->getLifecycle()->fire($paramEvent);
+                }
+            }
+        }
     }
 
     /**
