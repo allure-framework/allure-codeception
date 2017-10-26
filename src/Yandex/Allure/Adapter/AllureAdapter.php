@@ -279,7 +279,7 @@ class AllureAdapter extends Extension
             $currentExample = $test->getMetadata()->getCurrent();
             if ($currentExample && isset($currentExample['example']) ) {
                 foreach ($currentExample['example'] as $name => $param) {
-                    $paramEvent = new Event\AddParameterEvent($name, $param, ParameterKind::ARGUMENT);
+                    $paramEvent = new Event\AddParameterEvent($name, $this->stringifyArgument($param), ParameterKind::ARGUMENT);
                     $this->getLifecycle()->fire($paramEvent);
                 }
             }
@@ -291,7 +291,7 @@ class AllureAdapter extends Extension
                 $paramNames = $testMethod->getParameters();
                 foreach ($method->invoke($test) as $key => $param) {
                     $paramName = array_shift($paramNames);
-                    $paramEvent = new Event\AddParameterEvent(is_null($paramName) ? $key : $paramName->getName() , $param, ParameterKind::ARGUMENT);
+                    $paramEvent = new Event\AddParameterEvent(is_null($paramName) ? $key : $paramName->getName() , $this->stringifyArgument($param), ParameterKind::ARGUMENT);
                     $this->getLifecycle()->fire($paramEvent);
                 }
             }
@@ -459,4 +459,44 @@ class AllureAdapter extends Extension
         return $parts;
     }
 
+    protected function stringifyArgument($argument)
+    {
+        if (is_string($argument)) {
+            return '"' . strtr($argument, ["\n" => '\n', "\r" => '\r', "\t" => ' ']) . '"';
+        } elseif (is_resource($argument)) {
+            $argument = (string)$argument;
+        } elseif (is_array($argument)) {
+            foreach ($argument as $key => $value) {
+                if (is_object($value)) {
+                    $argument[$key] = $this->getClassName($value);
+}
+            }
+        } elseif (is_object($argument)) {
+            if (method_exists($argument, '__toString')) {
+                $argument = (string)$argument;
+            } elseif (get_class($argument) == 'Facebook\WebDriver\WebDriverBy') {
+                $argument = Locator::humanReadableString($argument);
+            } else {
+                $argument = $this->getClassName($argument);
+            }
+        }
+
+        return json_encode($argument, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+    protected function getClassName($argument)
+    {
+        if ($argument instanceof \Closure) {
+            return 'Closure';
+        } elseif ((isset($argument->__mocked))) {
+            return $this->formatClassName($argument->__mocked);
+        } else {
+            return $this->formatClassName(get_class($argument));
+        }
+    }
+
+    protected function formatClassName($classname)
+    {
+        return trim($classname, "\\");
+    }
 }
