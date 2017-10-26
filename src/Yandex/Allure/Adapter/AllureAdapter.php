@@ -27,6 +27,7 @@ use Yandex\Allure\Adapter\Event\TestSuiteStartedEvent;
 use Yandex\Allure\Adapter\Model;
 use Yandex\Allure\Adapter\Model\ParameterKind;
 
+const ARGUMENTS_LENGTH = 'arguments_length';
 const OUTPUT_DIRECTORY_PARAMETER = 'outputDirectory';
 const DELETE_PREVIOUS_RESULTS_PARAMETER = 'deletePreviousResults';
 const DEFAULT_RESULTS_DIRECTORY = 'allure-results';
@@ -348,8 +349,14 @@ class AllureAdapter extends Extension
 
     public function stepBefore(StepEvent $stepEvent)
     {
-        $stepAction = $stepEvent->getStep()->__toString();
-        $this->getLifecycle()->fire(new StepStartedEvent($stepAction));
+        $stepAction = $stepEvent->getStep()->getHumanizedActionWithoutArguments();
+        $argumentsLength = $this->tryGetOption(ARGUMENTS_LENGTH, 200);
+        $stepArgs = $stepEvent->getStep()->getArgumentsAsString($argumentsLength);
+        $stepName = $stepAction . ' ' . $stepArgs;
+
+        //Workaround for https://github.com/allure-framework/allure-core/issues/442
+        $stepName = str_replace('.', '•', $stepName);
+        $this->getLifecycle()->fire(new StepStartedEvent($stepName));
     }
 
     public function stepAfter()
