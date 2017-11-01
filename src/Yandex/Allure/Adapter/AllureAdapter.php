@@ -246,11 +246,13 @@ class AllureAdapter extends Extension
         if ($test instanceof \Codeception\Test\Cest) {
             $className = get_class($test->getTestClass());
             if (class_exists($className, false)) {
-                $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getClassAnnotations($className));
+                $annotationManager = new Annotation\AnnotationManager(
+                        Annotation\AnnotationProvider::getClassAnnotations($className));
                 $annotationManager->updateTestCaseEvent($event);
             }
             if (method_exists($className, $test->getName())){
-                $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getMethodAnnotations($className, $test->getName()));
+                $annotationManager = new Annotation\AnnotationManager(
+                        Annotation\AnnotationProvider::getMethodAnnotations($className, $test->getName()));
                 $annotationManager->updateTestCaseEvent($event);
             }
         } else if ($test instanceof \Codeception\Test\Cept) {
@@ -281,7 +283,8 @@ class AllureAdapter extends Extension
             $currentExample = $test->getMetadata()->getCurrent();
             if ($currentExample && isset($currentExample['example']) ) {
                 foreach ($currentExample['example'] as $name => $param) {
-                    $paramEvent = new Event\AddParameterEvent($name, $this->stringifyArgument($param), ParameterKind::ARGUMENT);
+                    $paramEvent = new Event\AddParameterEvent(
+                            $name, $this->stringifyArgument($param), ParameterKind::ARGUMENT);
                     $this->getLifecycle()->fire($paramEvent);
                 }
             }
@@ -293,7 +296,12 @@ class AllureAdapter extends Extension
                 $paramNames = $testMethod->getParameters();
                 foreach ($method->invoke($test) as $key => $param) {
                     $paramName = array_shift($paramNames);
-                    $paramEvent = new Event\AddParameterEvent(is_null($paramName) ? $key : $paramName->getName() , $this->stringifyArgument($param), ParameterKind::ARGUMENT);
+                    $paramEvent = new Event\AddParameterEvent(
+                            is_null($paramName)
+                                ? $key
+                                : $paramName->getName(),
+                            $this->stringifyArgument($param),
+                            ParameterKind::ARGUMENT);
                     $this->getLifecycle()->fire($paramEvent);
                 }
             }
