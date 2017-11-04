@@ -199,7 +199,7 @@ class AllureAdapter extends Extension
             $filesystem->remove($files);
         }
     }
-    
+
     public function suiteBefore(SuiteEvent $suiteEvent)
     {
         $suite = $suiteEvent->getSuite();
@@ -234,10 +234,12 @@ class AllureAdapter extends Extension
             if ($currentExample && isset($currentExample['example']) ) {
                 $testName .= ' with data set #' . $this->testInvocations[$testFullName];
             }
+        } else if($test instanceof \Codeception\Test\Gherkin) {
+            $testName = $test->getMetadata()->getFeature();
         }
         return $testName;
     }
-    
+
     public function testStart(TestEvent $testEvent)
     {
         $test = $testEvent->getTest();
