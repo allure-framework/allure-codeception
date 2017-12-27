@@ -1,19 +1,27 @@
 <?php
-
 namespace Yandex\Allure\Adapter;
 
 use Codeception\Configuration;
+use Codeception\Event\FailEvent;
 use Codeception\Event\StepEvent;
 use Codeception\Event\SuiteEvent;
 use Codeception\Event\TestEvent;
-use Codeception\Event\FailEvent;
 use Codeception\Events;
-use Codeception\Platform\Extension;
 use Codeception\Exception\ConfigurationException;
-use Symfony\Component\Finder\Finder;
+use Codeception\Platform\Extension;
+use Codeception\Test\Cept;
+use Codeception\Test\Cest;
+use Codeception\Test\Gherkin;
+use Codeception\Util\Debug;
+use Codeception\Util\Locator;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Finder\Finder;
 use Yandex\Allure\Adapter\Annotation;
-use Yandex\Allure\Adapter\Event\StepFailedEvent;
+use Yandex\Allure\Adapter\Annotation\Description;
+use Yandex\Allure\Adapter\Annotation\Features;
+use Yandex\Allure\Adapter\Annotation\Issues;
+use Yandex\Allure\Adapter\Annotation\Stories;
+use Yandex\Allure\Adapter\Annotation\Title;
 use Yandex\Allure\Adapter\Event\StepFinishedEvent;
 use Yandex\Allure\Adapter\Event\StepStartedEvent;
 use Yandex\Allure\Adapter\Event\TestCaseBrokenEvent;
@@ -25,7 +33,12 @@ use Yandex\Allure\Adapter\Event\TestCaseStartedEvent;
 use Yandex\Allure\Adapter\Event\TestSuiteFinishedEvent;
 use Yandex\Allure\Adapter\Event\TestSuiteStartedEvent;
 use Yandex\Allure\Adapter\Model;
+use Yandex\Allure\Adapter\Model\Label;
+use Yandex\Allure\Adapter\Model\LabelType;
+use Yandex\Allure\Adapter\Model\ParameterKind;
+use function GuzzleHttp\json_encode;
 
+const ARGUMENTS_LENGTH = 'arguments_length';
 const OUTPUT_DIRECTORY_PARAMETER = 'outputDirectory';
 const DELETE_PREVIOUS_RESULTS_PARAMETER = 'deletePreviousResults';
 const IGNORED_ANNOTATION_PARAMETER = 'ignoredAnnotations';
@@ -46,7 +59,6 @@ class AllureAdapter extends Extension
     static $events = [
         Events::SUITE_BEFORE => 'suiteBefore',
         Events::SUITE_AFTER => 'suiteAfter',
-        Events::TEST_BEFORE => 'testBefore',
         Events::TEST_START => 'testStart',
         Events::TEST_FAIL => 'testFail',
         Events::TEST_ERROR => 'testError',
@@ -198,7 +210,7 @@ class AllureAdapter extends Extension
             $filesystem->remove($files);
         }
     }
-    
+
     public function suiteBefore(SuiteEvent $suiteEvent)
     {
         $suite = $suiteEvent->getSuite();
@@ -219,48 +231,105 @@ class AllureAdapter extends Extension
         $this->getLifecycle()->fire(new TestSuiteFinishedEvent($this->uuid));
     }
 
-    public function testBefore(TestEvent $testEvent)
-    {
-        $test = $testEvent->getTest();
+    private $testInvocations = array();
+    private function buildTestName($test) {
         $testName = $test->getName();
-        $event = new TestCaseStartedEvent($this->uuid, $testName);
-        if ($test instanceof \Codeception\Test\Cest) {
-            $testClass = get_class($test->getTestClass());
-            if (class_exists($testClass, false)) {
-                $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getClassAnnotations($testClass));
-                $annotationManager->updateTestCaseEvent($event);
+        if ($test instanceof Cest) {
+            $testFullName = get_class($test->getTestClass()) . '::' . $testName;
+            if(isset($this->testInvocations[$testFullName])) {
+                $this->testInvocations[$testFullName]++;
+            } else {
+                $this->testInvocations[$testFullName] = 0;
             }
-        } else if ($test instanceof \Codeception\Test\Cept) {
-            $annotations = $this->getCeptAnnotations($test);
-            if (count($annotations) > 0) {
-                $annotationManager = new Annotation\AnnotationManager($annotations);
-                $annotationManager->updateTestCaseEvent($event);
+            $currentExample = $test->getMetadata()->getCurrent();
+            if ($currentExample && isset($currentExample['example']) ) {
+                $testName .= ' with data set #' . $this->testInvocations[$testFullName];
             }
+        } else if($test instanceof Gherkin) {
+            $testName = $test->getMetadata()->getFeature();
         }
-        
-        $this->getLifecycle()->fire($event);
+        return $testName;
     }
-    
+
     public function testStart(TestEvent $testEvent)
     {
         $test = $testEvent->getTest();
-        $testName = $test->getName();
-        $event = new TestCaseStartedEvent($this->uuid, $testName);
-        if ($test instanceof \Codeception\Test\Cest) {
+        $testName = $this->buildTestName($test);
+        $event = new TestCaseStartedEvent($this->uuid, $testName);        
+        if ($test instanceof Cest) {
             $className = get_class($test->getTestClass());
-            if (method_exists($className, $testName)){
-                $annotationManager = new Annotation\AnnotationManager(Annotation\AnnotationProvider::getMethodAnnotations($className, $testName));
+            if (class_exists($className, false)) {
+                $annotationManager = new Annotation\AnnotationManager(
+                        Annotation\AnnotationProvider::getClassAnnotations($className));
                 $annotationManager->updateTestCaseEvent($event);
             }
-        } else if ($test instanceof \Codeception\Test\Cept) {
+            if (method_exists($className, $test->getName())){
+                $annotationManager = new Annotation\AnnotationManager(
+                        Annotation\AnnotationProvider::getMethodAnnotations($className, $test->getName()));
+                $annotationManager->updateTestCaseEvent($event);
+            }
+        } else if ($test instanceof Gherkin) {
+            $featureTags = $test->getFeatureNode()->getTags();
+            $scenarioTags = $test->getScenarioNode()->getTags();
+            $event->setLabels(
+                    array_map(
+                            function ($a) {
+                                return new Label($a, LabelType::FEATURE);
+                            },
+                            array_merge($featureTags, $scenarioTags)
+                        )
+                );
+        } else if ($test instanceof Cept) {
             $annotations = $this->getCeptAnnotations($test);
             if (count($annotations) > 0) {
                 $annotationManager = new Annotation\AnnotationManager($annotations);
                 $annotationManager->updateTestCaseEvent($event);
             }
+        } else if ($test instanceof \PHPUnit_Framework_TestCase) {
+            $methodName = $this->methodName = $test->getName(false);
+            $className = get_class($test);
+            if (class_exists($className, false)) {
+                $annotationManager = new Annotation\AnnotationManager(
+                    Annotation\AnnotationProvider::getClassAnnotations($className)
+                );
+                $annotationManager->updateTestCaseEvent($event);
+            }
+            if (method_exists($test, $methodName)) {
+                $annotationManager = new Annotation\AnnotationManager(
+                    Annotation\AnnotationProvider::getMethodAnnotations(get_class($test), $methodName)
+                );
+                $annotationManager->updateTestCaseEvent($event);
+            }
         }
-        
         $this->getLifecycle()->fire($event);
+
+        if ($test instanceof Cest) {
+            $currentExample = $test->getMetadata()->getCurrent();
+            if ($currentExample && isset($currentExample['example']) ) {
+                foreach ($currentExample['example'] as $name => $param) {
+                    $paramEvent = new Event\AddParameterEvent(
+                            $name, $this->stringifyArgument($param), ParameterKind::ARGUMENT);
+                    $this->getLifecycle()->fire($paramEvent);
+                }
+            }
+        } else if ($test instanceof \PHPUnit_Framework_TestCase) {
+            if ($test->usesDataProvider()) {
+                $method = new \ReflectionMethod(get_class($test), 'getProvidedData');
+                $method->setAccessible(true);
+                $testMethod = new \ReflectionMethod(get_class($test), $test->getName(false));
+                $paramNames = $testMethod->getParameters();
+                foreach ($method->invoke($test) as $key => $param) {
+                    $paramName = array_shift($paramNames);
+                    $paramEvent = new Event\AddParameterEvent(
+                            is_null($paramName)
+                                ? $key
+                                : $paramName->getName(),
+                            $this->stringifyArgument($param),
+                            ParameterKind::ARGUMENT);
+                    $this->getLifecycle()->fire($paramEvent);
+                }
+            }
+        }
     }
 
     /**
@@ -314,9 +383,24 @@ class AllureAdapter extends Extension
 
     public function stepBefore(StepEvent $stepEvent)
     {
-        $stepAction = $stepEvent->getStep()->__toString();
-        $this->getLifecycle()->fire(new StepStartedEvent($stepAction));
-    }
+        $argumentsLength = $this->tryGetOption(ARGUMENTS_LENGTH, 200);
+
+        $stepAction = $stepEvent->getStep()->getHumanizedActionWithoutArguments();
+        $stepArgs = $stepEvent->getStep()->getArgumentsAsString($argumentsLength);
+
+        if (!trim($stepAction)) {
+            $stepAction = $stepEvent->getStep()->getMetaStep()->getHumanizedActionWithoutArguments();
+            $stepArgs = $stepEvent->getStep()->getMetaStep()->getArgumentsAsString($argumentsLength);
+        }
+
+        $stepName = $stepAction . ' ' . $stepArgs;
+
+        //Workaround for https://github.com/allure-framework/allure-core/issues/442
+        $stepName = str_replace('.', '•', $stepName);
+
+        $this->emptyStep = false;
+        $this->getLifecycle()->fire(new StepStartedEvent($stepName));
+}
 
     public function stepAfter()
     {
@@ -361,38 +445,38 @@ class AllureAdapter extends Extension
                 $output = [];
                 if (preg_match('/\*\s\@(.*)\((.*)\)/', $line, $output) > 0) {
                     if ($output[1] == "Features") {
-                        $feature = new \Yandex\Allure\Adapter\Annotation\Features();
+                        $feature = new Features();
                         $features = $this->splitAnnotationContent($output[2]);
                         foreach($features as $featureName) {
                             $feature->featureNames[] = $featureName;
                         }
                         $annotations[get_class($feature)] = $feature;
                     } else if ($output[1] == 'Title') {
-                        $title = new \Yandex\Allure\Adapter\Annotation\Title();
+                        $title = new Title();
                         $title_content = str_replace('"', '', $output[2]);
                         $title->value = $title_content;
                         $annotations[get_class($title)] = $title;
                     } else if ($output[1] == 'Description') {
-                        $description = new \Yandex\Allure\Adapter\Annotation\Description();
+                        $description = new Description();
                         $description_content = str_replace('"', '', $output[2]);
                         $description->value = $description_content;
                         $annotations[get_class($description)] = $description;
                     } else if ($output[1] == 'Stories') {
                         $stories = $this->splitAnnotationContent($output[2]);
-                        $story = new \Yandex\Allure\Adapter\Annotation\Stories();
+                        $story = new Stories();
                         foreach($stories as $storyName) {
                             $story->stories[] = $storyName;
                         }
                         $annotations[get_class($story)] = $story;
                     } else if ($output[1] == 'Issues') {
                         $issues = $this->splitAnnotationContent($output[2]);
-                        $issue = new \Yandex\Allure\Adapter\Annotation\Issues();
+                        $issue = new Issues();
                         foreach($issues as $issueName) {
                             $issue->issueKeys[] = $issueName;
                         }
                         $annotations[get_class($issue)] = $issue;
                     } else {
-                        \Codeception\Util\Debug::debug("Tag not detected: ".$output[1]);
+                        Debug::debug("Tag not detected: ".$output[1]);
                     }
                 }
             }
@@ -418,4 +502,44 @@ class AllureAdapter extends Extension
         return $parts;
     }
 
+    protected function stringifyArgument($argument)
+    {
+        if (is_string($argument)) {
+            return '"' . strtr($argument, ["\n" => '\n', "\r" => '\r', "\t" => ' ']) . '"';
+        } elseif (is_resource($argument)) {
+            $argument = (string)$argument;
+        } elseif (is_array($argument)) {
+            foreach ($argument as $key => $value) {
+                if (is_object($value)) {
+                    $argument[$key] = $this->getClassName($value);
+}
+            }
+        } elseif (is_object($argument)) {
+            if (method_exists($argument, '__toString')) {
+                $argument = (string)$argument;
+            } elseif (get_class($argument) == 'Facebook\WebDriver\WebDriverBy') {
+                $argument = Locator::humanReadableString($argument);
+            } else {
+                $argument = $this->getClassName($argument);
+            }
+        }
+
+        return json_encode($argument, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+    protected function getClassName($argument)
+    {
+        if ($argument instanceof \Closure) {
+            return 'Closure';
+        } elseif ((isset($argument->__mocked))) {
+            return $this->formatClassName($argument->__mocked);
+        } else {
+            return $this->formatClassName(get_class($argument));
+        }
+    }
+
+    protected function formatClassName($classname)
+    {
+        return trim($classname, "\\");
+    }
 }
