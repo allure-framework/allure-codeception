@@ -258,16 +258,15 @@ class AllureAdapter extends Extension
         $event = new TestCaseStartedEvent($this->uuid, $testName);        
         if ($test instanceof Cest) {
             $className = get_class($test->getTestClass());
+            $annotations = [];
             if (class_exists($className, false)) {
-                $annotationManager = new Annotation\AnnotationManager(
-                        Annotation\AnnotationProvider::getClassAnnotations($className));
-                $annotationManager->updateTestCaseEvent($event);
+                $annotations = array_merge($annotations, Annotation\AnnotationProvider::getClassAnnotations($className));
             }
             if (method_exists($className, $test->getName())){
-                $annotationManager = new Annotation\AnnotationManager(
-                        Annotation\AnnotationProvider::getMethodAnnotations($className, $test->getName()));
-                $annotationManager->updateTestCaseEvent($event);
+                $annotations = array_merge($annotations, Annotation\AnnotationProvider::getMethodAnnotations($className, $test->getName()));
             }
+            $annotationManager = new Annotation\AnnotationManager($annotations);
+            $annotationManager->updateTestCaseEvent($event);
         } else if ($test instanceof Gherkin) {
             $featureTags = $test->getFeatureNode()->getTags();
             $scenarioTags = $test->getScenarioNode()->getTags();
