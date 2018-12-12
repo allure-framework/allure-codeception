@@ -1,5 +1,5 @@
 <?php
-namespace Yandex\Allure\Adapter;
+namespace Yandex\Allure\Codeception\Adapter;
 
 use Codeception\Configuration;
 use Codeception\Event\FailEvent;
@@ -16,12 +16,14 @@ use Codeception\Util\Debug;
 use Codeception\Util\Locator;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
+use Yandex\Allure\Adapter\Allure;
 use Yandex\Allure\Adapter\Annotation;
 use Yandex\Allure\Adapter\Annotation\Description;
 use Yandex\Allure\Adapter\Annotation\Features;
 use Yandex\Allure\Adapter\Annotation\Issues;
 use Yandex\Allure\Adapter\Annotation\Stories;
 use Yandex\Allure\Adapter\Annotation\Title;
+use Yandex\Allure\Adapter\Event\AddParameterEvent;
 use Yandex\Allure\Adapter\Event\StepFinishedEvent;
 use Yandex\Allure\Adapter\Event\StepStartedEvent;
 use Yandex\Allure\Adapter\Event\TestCaseBrokenEvent;
@@ -306,7 +308,7 @@ class AllureAdapter extends Extension
             $currentExample = $test->getMetadata()->getCurrent();
             if ($currentExample && isset($currentExample['example']) ) {
                 foreach ($currentExample['example'] as $name => $param) {
-                    $paramEvent = new Event\AddParameterEvent(
+                    $paramEvent = new AddParameterEvent(
                             $name, $this->stringifyArgument($param), ParameterKind::ARGUMENT);
                     $this->getLifecycle()->fire($paramEvent);
                 }
@@ -319,7 +321,7 @@ class AllureAdapter extends Extension
                 $paramNames = $testMethod->getParameters();
                 foreach ($method->invoke($test) as $key => $param) {
                     $paramName = array_shift($paramNames);
-                    $paramEvent = new Event\AddParameterEvent(
+                    $paramEvent = new AddParameterEvent(
                             is_null($paramName)
                                 ? $key
                                 : $paramName->getName(),
