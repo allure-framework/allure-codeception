@@ -1,5 +1,5 @@
 <?php
-namespace Yandex\Allure\Codeception\Adapter;
+namespace Yandex\Allure\Codeception;
 
 use Codeception\Configuration;
 use Codeception\Event\FailEvent;
@@ -48,7 +48,7 @@ const DEFAULT_RESULTS_DIRECTORY = 'allure-results';
 const DEFAULT_REPORT_DIRECTORY = 'allure-report';
 const INITIALIZED_PARAMETER = '_initialized';
 
-class AllureAdapter extends Extension
+class AllureCodeception extends Extension
 {
     //NOTE: here we implicitly assume that PHP runs in single-threaded mode
     private $uuid;
