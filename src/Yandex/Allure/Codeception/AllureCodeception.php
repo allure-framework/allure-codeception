@@ -1,6 +1,7 @@
 <?php
 namespace Yandex\Allure\Codeception;
 
+use Codeception\Codecept;
 use Codeception\Configuration;
 use Codeception\Extension;
 use Codeception\Event\FailEvent;
@@ -379,8 +380,9 @@ class AllureCodeception extends Extension
 
     public function testEnd(TestEvent $testEvent)
     {
-        $artifacts = $testEvent->getTest()->getMetadata()->getReports();
-        if (!empty($artifacts)) {
+        // attachments supported since Codeception 3.0
+        if (version_compare(Codecept::VERSION, '3.0.0') > -1) {
+            $artifacts = $testEvent->getTest()->getMetadata()->getReports();
             $testCaseStorage = $this->getLifecycle()->getTestCaseStorage()->get();
             foreach ($artifacts as $name => $artifact) {
                 $testCaseStorage->addAttachment(new Model\Attachment($name, $artifact, null));
