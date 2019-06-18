@@ -36,6 +36,7 @@ use Yandex\Allure\Adapter\Event\TestCaseStartedEvent;
 use Yandex\Allure\Adapter\Event\TestSuiteFinishedEvent;
 use Yandex\Allure\Adapter\Event\TestSuiteStartedEvent;
 use Yandex\Allure\Adapter\Model;
+use Yandex\Allure\Adapter\Model\Attachment;
 use Yandex\Allure\Adapter\Model\Label;
 use Yandex\Allure\Adapter\Model\LabelType;
 use Yandex\Allure\Adapter\Model\ParameterKind;
@@ -385,7 +386,7 @@ class AllureCodeception extends Extension
             $artifacts = $testEvent->getTest()->getMetadata()->getReports();
             $testCaseStorage = $this->getLifecycle()->getTestCaseStorage()->get();
             foreach ($artifacts as $name => $artifact) {
-                $testCaseStorage->addAttachment(new Model\Attachment($name, $artifact, null));
+                $testCaseStorage->addAttachment(new Attachment($name, $artifact, null));
             }
         }
         $this->getLifecycle()->fire(new TestCaseFinishedEvent());
