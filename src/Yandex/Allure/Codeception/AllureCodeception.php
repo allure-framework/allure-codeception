@@ -2,13 +2,13 @@
 namespace Yandex\Allure\Codeception;
 
 use Codeception\Configuration;
+use Codeception\Extension;
 use Codeception\Event\FailEvent;
 use Codeception\Event\StepEvent;
 use Codeception\Event\SuiteEvent;
 use Codeception\Event\TestEvent;
 use Codeception\Events;
 use Codeception\Exception\ConfigurationException;
-use Codeception\Platform\Extension;
 use Codeception\Test\Cept;
 use Codeception\Test\Cest;
 use Codeception\Test\Gherkin;
@@ -286,7 +286,7 @@ class AllureCodeception extends Extension
                 $annotationManager = new Annotation\AnnotationManager($annotations);
                 $annotationManager->updateTestCaseEvent($event);
             }
-        } else if ($test instanceof \PHPUnit_Framework_TestCase) {
+        } else if ($test instanceof \PHPUnit\Framework\TestCase) {
             $methodName = $this->methodName = $test->getName(false);
             $className = get_class($test);
             if (class_exists($className, false)) {
@@ -377,8 +377,15 @@ class AllureCodeception extends Extension
         $this->getLifecycle()->fire($event->withException($e)->withMessage($message));
     }
 
-    public function testEnd()
+    public function testEnd(TestEvent $testEvent)
     {
+        $artifacts = $testEvent->getTest()->getMetadata()->getReports();
+        if (!empty($artifacts)) {
+            $testCaseStorage = $this->getLifecycle()->getTestCaseStorage()->get();
+            foreach ($artifacts as $name => $artifact) {
+                $testCaseStorage->addAttachment(new Model\Attachment($name, $artifact, null));
+            }
+        }
         $this->getLifecycle()->fire(new TestCaseFinishedEvent());
     }
 
