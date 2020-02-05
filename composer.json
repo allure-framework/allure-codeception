@@ -16,9 +16,9 @@
         "source": "https://github.com/allure-framework/allure-codeception"
     },
     "require": {
-	    "php": ">=5.4.0",
+	    "php": ">=5.6",
         "codeception/codeception": "^2.3|^3.0",
-        "allure-framework/allure-php-api": "~1.1.0",
+        "allure-framework/allure-php-api": "~1.1.7",
         "symfony/filesystem": ">=2.6",
         "symfony/finder": ">=2.6"
     },
