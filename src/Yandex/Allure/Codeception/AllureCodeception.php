@@ -382,7 +382,7 @@ class AllureCodeception extends Extension
     public function testEnd(TestEvent $testEvent)
     {
         // attachments supported since Codeception 3.0
-        if (version_compare(Codecept::VERSION, '3.0.0') > -1) {
+        if (version_compare(Codecept::VERSION, '3.0.0') > -1 && $testEvent->getTest() instanceof Cest) {
             $artifacts = $testEvent->getTest()->getMetadata()->getReports();
             $testCaseStorage = $this->getLifecycle()->getTestCaseStorage()->get();
             foreach ($artifacts as $name => $artifact) {
