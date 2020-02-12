@@ -261,7 +261,12 @@ class AllureCodeception extends Extension
         $testName = $this->buildTestName($test);
         $event = new TestCaseStartedEvent($this->uuid, $testName);        
         if ($test instanceof Cest) {
+            $methodName = $test->getName();
             $className = get_class($test->getTestClass());
+            $event->setLabels(array_merge($event->getLabels(), [
+                new Label("testMethod", $methodName),
+                new Label("testClass", $className)
+            ]));
             $annotations = [];
             if (class_exists($className, false)) {
                 $annotations = array_merge($annotations, Annotation\AnnotationProvider::getClassAnnotations($className));
@@ -382,7 +387,7 @@ class AllureCodeception extends Extension
     public function testEnd(TestEvent $testEvent)
     {
         // attachments supported since Codeception 3.0
-        if (version_compare(Codecept::VERSION, '3.0.0') > -1) {
+        if (version_compare(Codecept::VERSION, '3.0.0') > -1 && $testEvent->getTest() instanceof Cest) {
             $artifacts = $testEvent->getTest()->getMetadata()->getReports();
             $testCaseStorage = $this->getLifecycle()->getTestCaseStorage()->get();
             foreach ($artifacts as $name => $artifact) {
