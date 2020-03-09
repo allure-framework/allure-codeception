@@ -263,12 +263,12 @@ class AllureCodeception extends Extension
         $testName = $this->buildTestName($test);
         $event = new TestCaseStartedEvent($this->uuid, $testName);        
         if ($test instanceof Cest) {
-            $methodName = $test->getName();
+            // $methodName = $test->getName();
             $className = get_class($test->getTestClass());
-            $event->setLabels(array_merge($event->getLabels(), [
+            /*$event->setLabels(array_merge($event->getLabels(), [
                 new Label("testMethod", $methodName),
                 new Label("testClass", $className)
-            ]));
+            ]));*/
             $annotations = [];
             if (class_exists($className, false)) {
                 $annotations = array_merge($annotations, Annotation\AnnotationProvider::getClassAnnotations($className));
