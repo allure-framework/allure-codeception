@@ -14,4 +14,4 @@ change-template: '* $TITLE (via #$NUMBER) - @$AUTHOR'
 template: |
   $CHANGES
   ## 👀 Links
-  [Commits since $PREVIOUS_TAG](https://github.com/allure-framework/allure-php-commons/compare/$PREVIOUS_TAG...master)
+  [Commits since $PREVIOUS_TAG](https://github.com/allure-framework/allure-codeception/compare/$PREVIOUS_TAG...master)
