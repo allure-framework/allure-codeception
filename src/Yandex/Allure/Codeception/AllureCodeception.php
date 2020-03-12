@@ -24,6 +24,7 @@ use Yandex\Allure\Adapter\Annotation\Features;
 use Yandex\Allure\Adapter\Annotation\Issues;
 use Yandex\Allure\Adapter\Annotation\Stories;
 use Yandex\Allure\Adapter\Annotation\Title;
+use Yandex\Allure\Adapter\Event\AddAttachmentEvent;
 use Yandex\Allure\Adapter\Event\AddParameterEvent;
 use Yandex\Allure\Adapter\Event\StepFinishedEvent;
 use Yandex\Allure\Adapter\Event\StepStartedEvent;
@@ -389,9 +390,8 @@ class AllureCodeception extends Extension
         // attachments supported since Codeception 3.0
         if (version_compare(Codecept::VERSION, '3.0.0') > -1 && $testEvent->getTest() instanceof Cest) {
             $artifacts = $testEvent->getTest()->getMetadata()->getReports();
-            $testCaseStorage = $this->getLifecycle()->getTestCaseStorage()->get();
             foreach ($artifacts as $name => $artifact) {
-                $testCaseStorage->addAttachment(new Attachment($name, $artifact, null));
+                Allure::lifecycle()->fire(new AddAttachmentEvent($artifact, $name, null));
             }
         }
         $this->getLifecycle()->fire(new TestCaseFinishedEvent());
