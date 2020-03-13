@@ -25,6 +25,7 @@ use Yandex\Allure\Adapter\Annotation\Issues;
 use Yandex\Allure\Adapter\Annotation\Stories;
 use Yandex\Allure\Adapter\Annotation\Title;
 use Yandex\Allure\Adapter\Event\AddParameterEvent;
+use Yandex\Allure\Adapter\Event\StepFailedEvent;
 use Yandex\Allure\Adapter\Event\StepFinishedEvent;
 use Yandex\Allure\Adapter\Event\StepStartedEvent;
 use Yandex\Allure\Adapter\Event\TestCaseBrokenEvent;
@@ -418,8 +419,11 @@ class AllureCodeception extends Extension
         $this->getLifecycle()->fire(new StepStartedEvent($stepName));
 }
 
-    public function stepAfter()
+    public function stepAfter(StepEvent $stepEvent)
     {
+        if ($stepEvent->getStep()->hasFailed()) {
+            $this->getLifecycle()->fire(new StepFailedEvent());
+        }
         $this->getLifecycle()->fire(new StepFinishedEvent());
     }
 
