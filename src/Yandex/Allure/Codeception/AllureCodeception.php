@@ -412,9 +412,6 @@ class AllureCodeception extends Extension
 
         $stepName = $stepAction . ' ' . $stepArgs;
 
-        //Workaround for https://github.com/allure-framework/allure-core/issues/442
-        $stepName = str_replace('.', '•', $stepName);
-
         $this->emptyStep = false;
         $this->getLifecycle()->fire(new StepStartedEvent($stepName));
 }
