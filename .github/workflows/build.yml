@@ -1,0 +1,22 @@
+name: Build
+
+on:
+  pull_request:
+    branches:
+      - '*'
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.3'
+      - name: Install
+        run: composer install
+      - name: Install
+        run: composer validate

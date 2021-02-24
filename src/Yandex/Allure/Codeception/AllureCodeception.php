@@ -24,7 +24,9 @@ use Yandex\Allure\Adapter\Annotation\Features;
 use Yandex\Allure\Adapter\Annotation\Issues;
 use Yandex\Allure\Adapter\Annotation\Stories;
 use Yandex\Allure\Adapter\Annotation\Title;
+use Yandex\Allure\Adapter\Event\AddAttachmentEvent;
 use Yandex\Allure\Adapter\Event\AddParameterEvent;
+use Yandex\Allure\Adapter\Event\StepFailedEvent;
 use Yandex\Allure\Adapter\Event\StepFinishedEvent;
 use Yandex\Allure\Adapter\Event\StepStartedEvent;
 use Yandex\Allure\Adapter\Event\TestCaseBrokenEvent;
@@ -384,9 +386,8 @@ class AllureCodeception extends Extension
         // attachments supported since Codeception 3.0
         if (version_compare(Codecept::VERSION, '3.0.0') > -1  && $testEvent->getTest() instanceof Cest) {
             $artifacts = $testEvent->getTest()->getMetadata()->getReports();
-            $testCaseStorage = $this->getLifecycle()->getTestCaseStorage()->get();
             foreach ($artifacts as $name => $artifact) {
-                $testCaseStorage->addAttachment(new Attachment($name, $artifact, null));
+                Allure::lifecycle()->fire(new AddAttachmentEvent($artifact, $name, null));
             }
         }
         $this->getLifecycle()->fire(new TestCaseFinishedEvent());
@@ -406,15 +407,15 @@ class AllureCodeception extends Extension
 
         $stepName = $stepAction . ' ' . $stepArgs;
 
-        //Workaround for https://github.com/allure-framework/allure-core/issues/442
-        $stepName = str_replace('.', '•', $stepName);
-
         $this->emptyStep = false;
         $this->getLifecycle()->fire(new StepStartedEvent($stepName));
 }
 
-    public function stepAfter()
+    public function stepAfter(StepEvent $stepEvent)
     {
+        if ($stepEvent->getStep()->hasFailed()) {
+            $this->getLifecycle()->fire(new StepFailedEvent());
+        }
         $this->getLifecycle()->fire(new StepFinishedEvent());
     }
 
