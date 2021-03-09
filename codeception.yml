@@ -1,0 +1,21 @@
+namespace: Yandex\Allure\Codeception
+suites:
+  unit:
+    path: .
+
+settings:
+  lint: true
+paths:
+  tests: test/codeception
+  output: build
+  support: test/codeception/_support
+  data: test/codeception
+extensions:
+  enabled:
+    - Yandex\Allure\Codeception\AllureCodeception
+  config:
+    Yandex\Allure\Codeception\AllureCodeception:
+      deletePreviousResults: true
+      outputDirectory: allure-results
+
+
