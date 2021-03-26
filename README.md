@@ -1,5 +1,7 @@
 # Allure Codeception Adapter
 
+[![Build](https://github.com/allure-framework/allure-codeception/actions/workflows/build.yml/badge.svg)](https://github.com/allure-framework/allure-codeception/actions/workflows/build.yml)
+
 This is an official [Codeception](http://codeception.com) adapter for Allure Framework.
 
 ## What is this for?
