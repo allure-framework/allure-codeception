@@ -37,7 +37,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
-          extensions: pcntl, posix
+          extensions: pcntl, posix, intl
           coverage: xdebug
           ini-values: error_reporting=E_ALL
 
