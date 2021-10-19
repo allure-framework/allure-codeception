@@ -1,6 +1,11 @@
 # Allure Codeception Adapter
 
+[![Latest Stable Version](http://poser.pugx.org/allure-framework/allure-codeception/v)](https://packagist.org/packages/allure-framework/allure-codeception)
 [![Build](https://github.com/allure-framework/allure-codeception/actions/workflows/build.yml/badge.svg)](https://github.com/allure-framework/allure-codeception/actions/workflows/build.yml)
+[![Type Coverage](https://shepherd.dev/github/allure-framework/allure-codeception/coverage.svg)](https://shepherd.dev/github/allure-framework/allure-codeception)
+[![Psalm Level](https://shepherd.dev/github/allure-framework/allure-codeception/level.svg)](https://shepherd.dev/github/allure-framework/allure-codeception)
+[![Total Downloads](http://poser.pugx.org/allure-framework/allure-codeception/downloads)](https://packagist.org/packages/allure-framework/allure-codeception)
+[![License](http://poser.pugx.org/allure-framework/allure-codeception/license)](https://packagist.org/packages/allure-framework/allure-codeception)
 
 This is an official [Codeception](http://codeception.com) adapter for Allure Framework.
 
@@ -15,8 +20,8 @@ In order to use this adapter you need to add a new dependency to your **composer
 ```
 {
     "require": {
-	    "php": ">=5.4.0",
-	    "allure-framework/allure-codeception": ">=1.1.0"
+	    "php": "^8",
+	    "allure-framework/allure-codeception": "^2"
     }
 }
 ```
@@ -24,25 +29,16 @@ To enable this adapter in Codeception tests simply put it in "enabled" extension
 ```yaml
 extensions:
     enabled:
-        - Yandex\Allure\Codeception\AllureCodeception
+        - Qameta\Allure\Codeception\AllureCodeception
     config:
-        Yandex\Allure\Codeception\AllureCodeception:
-            deletePreviousResults: false
+      Qameta\Allure\Codeception\AllureCodeception:
             outputDirectory: allure-results
-            ignoredAnnotations:
-                - env
-                - dataprovider
 ```
-
-`deletePreviousResults` will clear all `.xml` files from output directory (this
-behavior may change to complete cleanup later). It is set to `false` by default.
 
 `outputDirectory` is used to store Allure results and will be calculated
 relatively to Codeception output directory (also known as `paths: log` in
 codeception.yml) unless you specify an absolute path. You can traverse up using
 `..` as usual. `outputDirectory` defaults to `allure-results`.
-
-`ignoredAnnotations` is used to define extra custom annotations to ignore. It is empty by default.
 
 To generate report from your favourite terminal,
 [install](https://github.com/allure-framework/allure-cli#installation)
@@ -50,10 +46,10 @@ allure-cli and run following command (assuming you're in project root and using
 default configuration):
 
 ```bash
-allure generate --report-version 1.4.5 --report-path tests/_output/allure-report -- tests/_output/allure-results
+allure generate -o ./build/allure-report ./build/allure-results
 ```
 
-Report will be generated in `tests/_output/allure-report`.
+Report will be generated in `build/allure-report`.
 
 ## Main features
 See respective [PHPUnit](https://github.com/allure-framework/allure-phpunit#advanced-features) section.
