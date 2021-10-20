@@ -2,14 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Yandex\Allure\Codeception;
+namespace Qameta\Allure\Codeception\Test\Unit;
 
 use Codeception\Lib\ModuleContainer;
 use Codeception\Scenario;
-use Codeception\Step\Assertion;
 use Codeception\Step\Comment;
 use Codeception\Step\Meta;
-use Codeception\Step\TryTo;
 use Codeception\Test\Unit;
 use Exception;
 use PHPUnit\Framework\Assert;
@@ -45,6 +43,13 @@ class StepsTest extends Unit
         $this->expectNotToPerformAssertions();
         $scenario = new Scenario($this);
         $scenario->runStep(new Comment('Step 1 name'));
+    }
+
+    public function testSingleSuccessfulStepWithArguments(): void
+    {
+        $this->expectNotToPerformAssertions();
+        $scenario = new Scenario($this);
+        $scenario->runStep(new Comment('Step 1 name', ['foo' => 'bar']));
     }
 
     public function testTwoSuccessfulSteps(): void

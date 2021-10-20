@@ -2,17 +2,24 @@
 
 declare(strict_types=1);
 
-namespace Yandex\Allure\Codeception;
+namespace Qameta\Allure\Codeception\Test;
 
-use DOMDocument;
-use DOMXPath;
 use PHPUnit\Framework\TestCase;
+use Qameta\Allure\Codeception\Test\Unit\AnnotationTest;
+use Qameta\Allure\Codeception\Test\Unit\StepsTest;
+use Remorhaz\JSON\Data\Value\EncodedJson\NodeValueFactory;
+use Remorhaz\JSON\Data\Value\NodeValueInterface;
+use Remorhaz\JSON\Path\Processor\Processor;
+use Remorhaz\JSON\Path\Processor\ProcessorInterface;
+use Remorhaz\JSON\Path\Query\QueryFactory;
+use Remorhaz\JSON\Path\Query\QueryFactoryInterface;
 use RuntimeException;
 
+use function file_get_contents;
 use function is_file;
 use function pathinfo;
 use function scandir;
-use function sprintf;
+use function str_ends_with;
 
 use const DIRECTORY_SEPARATOR;
 use const PATHINFO_EXTENSION;
@@ -21,243 +28,312 @@ class ReportTest extends TestCase
 {
 
     /**
-     * @var string
+     * @var array<string, array<string, NodeValueInterface>>
      */
-    private $buildPath;
+    private static array $testResults = [];
 
-    /**
-     * @var DOMXPath[]
-     */
-    private $sources = [];
+    private ?ProcessorInterface $jsonPathProcessor = null;
 
-    public function setUp(): void
+    private ?QueryFactoryInterface $jsonPathQueryFactory = null;
+
+    public static function setUpBeforeClass(): void
     {
-        $this->buildPath = __DIR__ . '/../../build/allure-results';
-        $files = scandir($this->buildPath);
+        $buildPath = __DIR__ . '/../../build/allure-results';
+        $files = scandir($buildPath);
+
+        $jsonValueFactory = NodeValueFactory::create();
+        $jsonPathProcessor = Processor::create();
+        $jsonPathQueryFactory = QueryFactory::create();
+        $testMethodsQuery = $jsonPathQueryFactory
+            ->createQuery('$.labels[?(@.name=="testMethod")].value');
+        $testClassesQuery = $jsonPathQueryFactory
+            ->createQuery('$.labels[?(@.name=="testClass")].value');
 
         foreach ($files as $fileName) {
-            $file = $this->buildPath . DIRECTORY_SEPARATOR . $fileName;
+            $file = $buildPath . DIRECTORY_SEPARATOR . $fileName;
             if (!is_file($file)) {
                 continue;
             }
             $extension = pathinfo($file, PATHINFO_EXTENSION);
-            if ('xml' == $extension) {
-                $dom = new DOMDocument();
-                $dom->load($file);
-
-                $path = new DOMXPath($dom);
-                $name = $path->query('/alr:test-suite/name')->item(0)->textContent;
-                if (isset($this->sources[$name])) {
-                    throw new RuntimeException("Duplicate test suite: {$name}");
+            if ('json' == $extension) {
+                $fileName = pathinfo($file, PATHINFO_FILENAME);
+                if (!str_ends_with($fileName, '-result')) {
+                    continue;
                 }
-                $this->sources[$name] = $path;
+                $fileContent = file_get_contents($file);
+                $data = $jsonValueFactory->createValue($fileContent);
+                /** @var mixed $class */
+                $class = $jsonPathProcessor
+                    ->select($testClassesQuery, $data)
+                    ->decode()[0] ?? null;
+                /** @var mixed $method */
+                $method = $jsonPathProcessor
+                    ->select($testMethodsQuery, $data)
+                    ->decode()[0] ?? null;
+                if (!isset($class, $method)) {
+                    throw new RuntimeException("Test not found in file $file");
+                }
+                self::assertIsString($class);
+                self::assertIsString($method);
+                self::$testResults[$class][$method] = $data;
             }
         }
     }
 
     /**
      * @param string $class
-     * @param string $xpath
+     * @param string $method
+     * @param string $jsonPath
      * @param string $expectedValue
-     * @dataProvider providerSingleTextNode
+     * @dataProvider providerSingleNodeValueStartsFromString
      */
-    public function testSingleTextNode(string $class, string $xpath, string $expectedValue): void
-    {
-        self::assertArrayHasKey($class, $this->sources);
-        $actualValue = $this
-            ->sources[$class]
-            ->query($xpath)
-            ->item(0)
-            ->textContent;
-        self::assertSame($expectedValue, $actualValue);
+    public function testSingleNodeValueStartsFromString(
+        string $class,
+        string $method,
+        string $jsonPath,
+        string $expectedValue
+    ): void {
+        /** @psalm-var mixed $nodes */
+        $nodes = $this
+            ->getJsonPathProcessor()
+            ->select(
+                $this->getJsonPathQueryFactory()->createQuery($jsonPath),
+                self::$testResults[$class][$method]
+                    ?? throw new RuntimeException("Result not found for $class::$method"),
+            )
+            ->decode();
+        self::assertIsArray($nodes);
+        self::assertCount(1, $nodes);
+        $value = $nodes[0] ?? null;
+        self::assertIsString($value);
+        self::assertStringStartsWith($expectedValue, $value);
     }
 
-    public function providerSingleTextNode(): iterable
+    /**
+     * @return iterable<string, array{string, string, string, string}>
+     */
+    public function providerSingleNodeValueStartsFromString(): iterable
     {
         return [
-            'Test case title annotation' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testTitleAnnotation',
-                    '/title'
-                ),
-                'Test title',
-            ],
-            'Test case severity annotation' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testSeverityAnnotation',
-                    '/labels/label[@name="severity" and @value="minor"]'
-                ),
-                '',
-            ],
-            'Test case parameter annotation' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testParameterAnnotation',
-                    '/parameters/parameter[@name="foo" and @value="bar" and @kind="argument"]'
-                ),
-                '',
-            ],
-            'Test case stories annotation: first story' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testStoriesAnnotation',
-                    '/labels/label[@name="story" and @value="Story 1"]'
-                ),
-                '',
-            ],
-            'Test case stories annotation: second story' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testStoriesAnnotation',
-                    '/labels/label[@name="story" and @value="Story 2"]'
-                ),
-                '',
-            ],
-            'Test case features annotation: first feature' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testFeaturesAnnotation',
-                    '/labels/label[@name="feature" and @value="Feature 1"]'
-                ),
-                '',
-            ],
-            'Test case features annotation: second feature' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testFeaturesAnnotation',
-                    '/labels/label[@name="feature" and @value="Feature 2"]'
-                ),
-                '',
-            ],
-            'Successful test case without steps' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testNoStepsSuccess',
-                '[@status="passed"]/name'
-                ),
-                'testNoStepsSuccess',
-            ],
-            'Error in test case without steps' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testNoStepsError',
-                '[@status="broken"]/failure/message'
-                ),
-                'Error',
-            ],
-            'Failure in test case without steps' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testNoStepsFailure',
-                '[@status="failed"]/failure/message'
-                ),
-                'Failure',
-            ],
-            'Test case without steps skipped' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testNoStepsSkipped',
-                '[@status="canceled"]/failure/message'
-                ),
-                'Skipped',
-            ],
-            'Successful test case with single step: name' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testSingleSuccessfulStepWithTitle',
-                '[@status="passed"]/steps/step[1][@status="passed"]/name'
-                ),
-                'step 1 name ', // Codeception processes action internally
-            ],
-            'Successful test case with two successful steps: step 2 name' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testTwoSuccessfulSteps',
-                    '[@status="passed"]/steps/step[2][@status="passed"]/name'
-                ),
-                'step 2 name ', // Codeception processes action internally
-            ],
-            'First step in test case with two steps fails: failure' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testTwoStepsFirstFails',
-                    '[@status="failed"]/failure/message'
-                ),
-                'Failure',
-            ],
-            'First step in test case with two steps fails: step 1 name' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testTwoStepsFirstFails',
-                    '[@status="failed"]/steps/step[1][@status="failed"]/name'
-                ),
-                'step 1 name ', // Codeception processes action internally
-            ],
-            'Second step in test case with two steps fails: failure' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testTwoStepsSecondFails',
-                    '[@status="failed"]/failure/message'
-                ),
-                'Failure',
-            ],
-            'Second step in test case with two steps fails: step 1 name' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testTwoStepsSecondFails',
-                    '[@status="failed"]/steps/step[1][@status="passed"]/name'
-                ),
-                'step 1 name ', // Codeception processes action internally
-            ],
-            'Second step in test case with two steps fails: step 2 name' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testTwoStepsSecondFails',
-                    '[@status="failed"]/steps/step[2][@status="failed"]/name'
-                ),
-                'step 2 name ', // Codeception processes action internally
+            'Error message in test case without steps' => [
+                StepsTest::class,
+                'testNoStepsError',
+                '$.statusDetails.message',
+                "Error\nException(0)",
             ],
         ];
     }
 
     /**
-     * @param string $class
-     * @param string $xpath
-     * @dataProvider providerNodeNotExists
+     * @dataProvider providerExistingNodeValue
      */
-    public function testNodeNotExists(string $class, string $xpath): void
-    {
-        $testNode = $this
-            ->sources[$class]
-            ->query($xpath)
-            ->item(0);
-        self::assertNull($testNode);
+    public function testExistingNodeValue(
+        string $class,
+        string $method,
+        string $jsonPath,
+        array $expected
+    ): void {
+        $nodes = $this
+            ->getJsonPathProcessor()
+            ->select(
+                $this->getJsonPathQueryFactory()->createQuery($jsonPath),
+                self::$testResults[$class][$method]
+                    ?? throw new RuntimeException("Result not found for $class::$method"),
+            )
+            ->decode();
+        self::assertSame($expected, $nodes);
     }
 
-    public function providerNodeNotExists(): iterable
+    /**
+     * @return iterable<string, array{string, string, string, list<mixed>}>
+     */
+    public function providerExistingNodeValue(): iterable
     {
         return [
-            'Successful test case without steps: no steps' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testNoStepsSuccess',
-                    '/steps'
-                )
+            'Test case title annotation' => [
+                AnnotationTest::class,
+                'testTitleAnnotation',
+                '$.name',
+                ['Test title'],
             ],
-            'First step fails in test case with two steps: no second step' => [
-                'Yandex\Allure\Codeception.unit',
-                $this->buildTestXPath(
-                    'testTwoStepsFirstFails',
-                    '/steps/step[2]'
-                )
+            'Test case severity annotation' => [
+                AnnotationTest::class,
+                'testSeverityAnnotation',
+                '$.labels[?(@.name=="severity")].value',
+                ['minor'],
+            ],
+            'Test case parameter annotation' => [
+                AnnotationTest::class,
+                'testParameterAnnotation',
+                '$.parameters[?(@.name=="foo")].value',
+                ['bar'],
+            ],
+            'Test case stories annotation' => [
+                AnnotationTest::class,
+                'testStoriesAnnotation',
+                '$.labels[?(@.name=="story")].value',
+                ['Story 1', 'Story 2'],
+            ],
+            'Test case features annotation' => [
+                AnnotationTest::class,
+                'testFeaturesAnnotation',
+                '$.labels[?(@.name=="feature")].value',
+                ['Feature 1', 'Feature 2'],
+            ],
+            'Successful test case without steps' => [
+                StepsTest::class,
+                'testNoStepsSuccess',
+                '$.status',
+                ['passed'],
+            ],
+            'Successful test case without steps: no steps' => [
+                StepsTest::class,
+                'testNoStepsSuccess',
+                '$.steps[*]',
+                [],
+            ],
+            'Error in test case without steps' => [
+                StepsTest::class,
+                'testNoStepsError',
+                '$.status',
+                ['broken'],
+            ],
+            'Failure message in test case without steps' => [
+                StepsTest::class,
+                'testNoStepsFailure',
+                '$.statusDetails.message',
+                ['Failure'],
+            ],
+            'Test case without steps skipped' => [
+                StepsTest::class,
+                'testNoStepsSkipped',
+                '$.status',
+                ['skipped'],
+            ],
+            'Skipped message in test case without steps' => [
+                StepsTest::class,
+                'testNoStepsSkipped',
+                '$.statusDetails.message',
+                ['Skipped'],
+            ],
+            'Successful test case with single step: status' => [
+                StepsTest::class,
+                'testSingleSuccessfulStepWithTitle',
+                '$.status',
+                ['passed'],
+            ],
+            'Successful test case with single step: step status' => [
+                StepsTest::class,
+                'testSingleSuccessfulStepWithTitle',
+                '$.steps[*].status',
+                ['passed'],
+            ],
+            'Successful test case with single step: step name' => [
+                StepsTest::class,
+                'testSingleSuccessfulStepWithTitle',
+                '$.steps[*].name',
+                ['step 1 name'],
+            ],
+            'Successful test case with arguments in step: status' => [
+                StepsTest::class,
+                'testSingleSuccessfulStepWithArguments',
+                '$.status',
+                ['passed'],
+            ],
+            'Successful test case with arguments in step: step status' => [
+                StepsTest::class,
+                'testSingleSuccessfulStepWithArguments',
+                '$.steps[*].status',
+                ['passed'],
+            ],
+            'Successful test case with arguments in step: step name' => [
+                StepsTest::class,
+                'testSingleSuccessfulStepWithArguments',
+                '$.steps[*].name',
+                ['step 1 name'],
+            ],
+            'Successful test case with arguments in step: step parameter' => [
+                StepsTest::class,
+                'testSingleSuccessfulStepWithArguments',
+                '$.steps[*].parameters[?(@.name=="foo")].value',
+                ['"bar"'],
+            ],
+            'Successful test case with two successful steps: status' => [
+                StepsTest::class,
+                'testTwoSuccessfulSteps',
+                '$.status',
+                ['passed'],
+            ],
+            'Successful test case with two successful steps: step status' => [
+                StepsTest::class,
+                'testTwoSuccessfulSteps',
+                '$.steps[*].status',
+                ['passed', 'passed'],
+            ],
+            'Successful test case with two successful steps: step name' => [
+                StepsTest::class,
+                'testTwoSuccessfulSteps',
+                '$.steps[*].name',
+                ['step 1 name', 'step 2 name'],
+            ],
+            'First step in test case with two steps fails: status' => [
+                StepsTest::class,
+                'testTwoStepsFirstFails',
+                '$.status',
+                ['failed'],
+            ],
+            'First step in test case with two steps fails: message' => [
+                StepsTest::class,
+                'testTwoStepsFirstFails',
+                '$.statusDetails.message',
+                ['Failure'],
+            ],
+            'First step in test case with two steps fails: step status' => [
+                StepsTest::class,
+                'testTwoStepsFirstFails',
+                '$.steps[*].status',
+                ['failed'],
+            ],
+            'First step in test case with two steps fails: step name' => [
+                StepsTest::class,
+                'testTwoStepsFirstFails',
+                '$.steps[*].name',
+                ['step 1 name'],
+            ],
+            'Second step in test case with two steps fails: status' => [
+                StepsTest::class,
+                'testTwoStepsSecondFails',
+                '$.status',
+                ['failed'],
+            ],
+            'Second step in test case with two steps fails: message' => [
+                StepsTest::class,
+                'testTwoStepsSecondFails',
+                '$.statusDetails.message',
+                ['Failure'],
+            ],
+            'Second step in test case with two steps fails: step status' => [
+                StepsTest::class,
+                'testTwoStepsSecondFails',
+                '$.steps[*].status',
+                ['passed', 'failed'],
+            ],
+            'Second step in test case with two steps fails: step name' => [
+                StepsTest::class,
+                'testTwoStepsSecondFails',
+                '$.steps[*].name',
+                ['step 1 name', 'step 2 name'],
             ],
         ];
     }
 
-    private function buildTestXPath(string $testName, string $tail): string
+    private function getJsonPathProcessor(): ProcessorInterface
     {
-        return sprintf('/alr:test-suite/test-cases/test-case[name="%s"]%s', $testName, $tail);
+        return $this->jsonPathProcessor ??= Processor::create();
+    }
+
+    private function getJsonPathQueryFactory(): QueryFactoryInterface
+    {
+        return $this->jsonPathQueryFactory ??= QueryFactory::create();
     }
 }
