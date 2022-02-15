@@ -14,7 +14,6 @@ use PHPUnit\Framework\Assert;
 
 class StepsTest extends Unit
 {
-
     public function testNoStepsSuccess(): void
     {
         $this->expectNotToPerformAssertions();
@@ -82,7 +81,6 @@ class StepsTest extends Unit
     private function createFailingStep(string $name, string $failure): \Codeception\Step
     {
         return new class ($failure, $name) extends Meta {
-
             private $failure;
 
             public function __construct(string $failure, $action, array $arguments = [])

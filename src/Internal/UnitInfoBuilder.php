@@ -10,7 +10,6 @@ use function preg_match;
 
 final class UnitInfoBuilder implements TestInfoBuilderInterface
 {
-
     public function __construct(
         private TestCase $test,
     ) {

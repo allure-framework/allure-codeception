@@ -12,7 +12,6 @@ use function is_string;
 
 final class CestInfoBuilder implements TestInfoBuilderInterface
 {
-
     public function __construct(
         private Cest $test,
     ) {

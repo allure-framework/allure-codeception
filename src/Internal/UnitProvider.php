@@ -6,8 +6,7 @@ namespace Qameta\Allure\Codeception\Internal;
 
 use PHPUnit\Framework\TestCase;
 use Qameta\Allure\Attribute\AttributeParser;
-use Qameta\Allure\Attribute\LinkTemplateInterface;
-use Qameta\Allure\Model\Label;
+use Qameta\Allure\Setup\LinkTemplateCollectionInterface;
 use Qameta\Allure\Model\ModelProviderInterface;
 use Qameta\Allure\Model\Parameter;
 use ReflectionException;
@@ -21,24 +20,23 @@ use function is_int;
  */
 final class UnitProvider implements ModelProviderInterface
 {
-
     /**
-     * @param TestCase                             $test
-     * @param array<string, LinkTemplateInterface> $linkTemplates
+     * @param TestCase                        $test
+     * @param LinkTemplateCollectionInterface $linkTemplates
      */
     public function __construct(
         private TestCase $test,
-        array $linkTemplates = [],
+        LinkTemplateCollectionInterface $linkTemplates,
     ) {
     }
 
     /**
-     * @param TestCase                             $test
-     * @param array<string, LinkTemplateInterface> $linkTemplates
+     * @param TestCase                        $test
+     * @param LinkTemplateCollectionInterface $linkTemplates
      * @throws ReflectionException
      * @return list<ModelProviderInterface>
      */
-    public static function createForChain(TestCase $test, array $linkTemplates = []): array
+    public static function createForChain(TestCase $test, LinkTemplateCollectionInterface $linkTemplates): array
     {
         /**
          * @var callable-string|null $methodOrFunction
@@ -100,14 +98,6 @@ final class UnitProvider implements ModelProviderInterface
         return $params;
     }
 
-    /**
-     * @deprecated Please use {@see getDisplayName()} method
-     */
-    public function getTitle(): ?string
-    {
-        return $this->getDisplayName();
-    }
-
     public function getDisplayName(): ?string
     {
         /** @psalm-suppress InternalMethod */
@@ -120,6 +110,11 @@ final class UnitProvider implements ModelProviderInterface
     }
 
     public function getDescriptionHtml(): ?string
+    {
+        return null;
+    }
+
+    public function getFullName(): ?string
     {
         return null;
     }

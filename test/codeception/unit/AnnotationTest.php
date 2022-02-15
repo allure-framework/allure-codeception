@@ -9,7 +9,6 @@ use Qameta\Allure\Attribute;
 
 class AnnotationTest extends Unit
 {
-
     #[Attribute\DisplayName('Test title')]
     public function testTitleAnnotation(): void
     {

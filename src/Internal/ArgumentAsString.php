@@ -8,6 +8,7 @@ use Codeception\Util\Locator;
 use Stringable;
 
 use function array_map;
+use function class_exists;
 use function is_a;
 use function is_array;
 use function is_object;
@@ -22,7 +23,6 @@ use function trim;
  */
 final class ArgumentAsString implements Stringable
 {
-
     public function __construct(
         private mixed $argument,
     ) {
@@ -75,7 +75,8 @@ final class ArgumentAsString implements Stringable
             return (string) $argument;
         }
 
-        if (is_a($argument, 'Facebook\WebDriver\WebDriverBy')) {
+        $webdriverByClass = '\Facebook\WebDriver\WebDriverBy';
+        if (class_exists($webdriverByClass) && is_a($argument, $webdriverByClass)) {
             return Locator::humanReadableString($argument);
         }
 

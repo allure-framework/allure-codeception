@@ -15,7 +15,6 @@ use Codeception\Exception\ConfigurationException;
 use Codeception\Step;
 use Qameta\Allure\Allure;
 use Qameta\Allure\Allure as QametaAllure;
-use Qameta\Allure\Attribute\LinkTemplateInterface;
 use Qameta\Allure\Codeception\Internal\DefaultThreadDetector;
 use Qameta\Allure\Codeception\Internal\SuiteInfo;
 use Qameta\Allure\Codeception\Internal\TestLifecycle;
@@ -35,7 +34,6 @@ use const DIRECTORY_SEPARATOR;
 
 final class AllureCodeception extends Extension
 {
-
     private const SETUP_HOOK_PARAMETER = 'setupHook';
     private const OUTPUT_DIRECTORY_PARAMETER = 'outputDirectory';
 
@@ -55,11 +53,6 @@ final class AllureCodeception extends Extension
         Events::STEP_AFTER => 'stepAfter'
     ];
 
-    /**
-     * @var array<string, LinkTemplateInterface>
-     */
-    private array $linkTemplates = [];
-
     private ?ThreadDetectorInterface $threadDetector = null;
 
     private ?TestLifecycleInterface $testLifecycle = null;
@@ -76,9 +69,9 @@ final class AllureCodeception extends Extension
         parent::_initialize();
         QametaAllure::reset();
         QametaAllure::getLifecycleConfigurator()
-            ->setStatusDetector(new StatusDetector(new DefaultStatusDetector()));
+            ->setStatusDetector(new StatusDetector(new DefaultStatusDetector()))
+            ->setOutputDirectory($this->getOutputDirectory());
         $this->callSetupHook();
-        QametaAllure::setOutputDirectory($this->getOutputDirectory());
     }
 
     private function callSetupHook(): void
@@ -270,10 +263,10 @@ final class AllureCodeception extends Extension
     {
         return $this->testLifecycle ??= new TestLifecycle(
             Allure::getLifecycle(),
-            Allure::getResultFactory(),
-            Allure::getStatusDetector(),
+            Allure::getConfig()->getResultFactory(),
+            Allure::getConfig()->getStatusDetector(),
             $this->getThreadDetector(),
-            $this->linkTemplates,
+            Allure::getConfig()->getLinkTemplates(),
         );
     }
 }

@@ -6,7 +6,6 @@ namespace Qameta\Allure\Codeception\Internal;
 
 final class TestStartInfo
 {
-
     public function __construct(
         private string $containerUuid,
         private string $testUuid,

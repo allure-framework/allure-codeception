@@ -10,7 +10,6 @@ use Qameta\Allure\Codeception\Test\FunctionalTester;
 #[DisplayName('Cest Title')]
 class ClassTitleCest
 {
-
     public function makeAction(FunctionalTester $I): void
     {
         $I->expect('some condition');

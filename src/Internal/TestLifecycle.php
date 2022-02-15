@@ -11,7 +11,6 @@ use Codeception\Test\Gherkin;
 use Codeception\TestInterface;
 use PHPUnit\Framework\TestCase;
 use Qameta\Allure\AllureLifecycleInterface;
-use Qameta\Allure\Attribute\LinkTemplateInterface;
 use Qameta\Allure\Codeception\Setup\ThreadDetectorInterface;
 use Qameta\Allure\Io\DataSourceFactory;
 use Qameta\Allure\Model\ModelProviderChain;
@@ -21,6 +20,7 @@ use Qameta\Allure\Model\Status;
 use Qameta\Allure\Model\StatusDetails;
 use Qameta\Allure\Model\StepResult;
 use Qameta\Allure\Model\TestResult;
+use Qameta\Allure\Setup\LinkTemplateCollectionInterface;
 use Qameta\Allure\Setup\StatusDetectorInterface;
 use RuntimeException;
 use Throwable;
@@ -33,7 +33,6 @@ use function is_string;
 
 final class TestLifecycle implements TestLifecycleInterface
 {
-
     private ?SuiteInfo $currentSuite = null;
 
     private ?TestInfo $currentTest = null;
@@ -48,18 +47,18 @@ final class TestLifecycle implements TestLifecycleInterface
     private WeakMap $stepStarts;
 
     /**
-     * @param AllureLifecycleInterface             $lifecycle
-     * @param ResultFactoryInterface               $resultFactory
-     * @param StatusDetectorInterface              $statusDetector
-     * @param ThreadDetectorInterface              $threadDetector
-     * @param array<string, LinkTemplateInterface> $linkTemplates
+     * @param AllureLifecycleInterface        $lifecycle
+     * @param ResultFactoryInterface          $resultFactory
+     * @param StatusDetectorInterface         $statusDetector
+     * @param ThreadDetectorInterface         $threadDetector
+     * @param LinkTemplateCollectionInterface $linkTemplates
      */
     public function __construct(
         private AllureLifecycleInterface $lifecycle,
         private ResultFactoryInterface $resultFactory,
         private StatusDetectorInterface $statusDetector,
         private ThreadDetectorInterface $threadDetector,
-        private array $linkTemplates = [],
+        private LinkTemplateCollectionInterface $linkTemplates,
     ) {
         /** @var WeakMap<Step, StepStartInfo> */
         $this->stepStarts = new WeakMap();
@@ -151,7 +150,7 @@ final class TestLifecycle implements TestLifecycleInterface
         $this->lifecycle->updateTest(
             fn (TestResult $t) => $t
                 ->setName($provider->getDisplayName())
-                ->setFullName($this->getCurrentTest()->getSignature())
+                ->setFullName($provider->getFullName())
                 ->setDescription($provider->getDescription())
                 ->setDescriptionHtml($provider->getDescriptionHtml())
                 ->addLinks(...$provider->getLinks())

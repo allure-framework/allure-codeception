@@ -26,7 +26,6 @@ use const PATHINFO_EXTENSION;
 
 class ReportTest extends TestCase
 {
-
     /**
      * @var array<string, array<string, NodeValueInterface>>
      */

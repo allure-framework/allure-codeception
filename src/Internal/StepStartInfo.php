@@ -8,7 +8,6 @@ use Codeception\Step;
 
 final class StepStartInfo
 {
-
     public function __construct(
         private Step $originalStep,
         private string $uuid,

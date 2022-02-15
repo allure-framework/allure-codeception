@@ -9,7 +9,6 @@ use Qameta\Allure\Model\ModelProviderInterface;
 
 final class TestInfoProvider implements ModelProviderInterface
 {
-
     public function __construct(
         private TestInfo $info,
     ) {
@@ -44,14 +43,6 @@ final class TestInfoProvider implements ModelProviderInterface
         return [];
     }
 
-    /**
-     * @deprecated Please use {@see getDisplayName()} method
-     */
-    public function getTitle(): ?string
-    {
-        return $this->getDisplayName();
-    }
-
     public function getDisplayName(): ?string
     {
         return null;
@@ -63,6 +54,11 @@ final class TestInfoProvider implements ModelProviderInterface
     }
 
     public function getDescriptionHtml(): ?string
+    {
+        return null;
+    }
+
+    public function getFullName(): ?string
     {
         return null;
     }

@@ -6,7 +6,7 @@ namespace Qameta\Allure\Codeception\Internal;
 
 use Codeception\Test\Cest;
 use Qameta\Allure\Attribute\AttributeParser;
-use Qameta\Allure\Attribute\LinkTemplateInterface;
+use Qameta\Allure\Setup\LinkTemplateCollectionInterface;
 use Qameta\Allure\Model\ModelProviderInterface;
 use Qameta\Allure\Model\Parameter;
 use ReflectionException;
@@ -24,19 +24,18 @@ use function is_string;
  */
 final class CestProvider implements ModelProviderInterface
 {
-
     public function __construct(
         private Cest $test,
     ) {
     }
 
     /**
-     * @param Cest                                 $test
-     * @param array<string, LinkTemplateInterface> $linkTemplates
+     * @param Cest                            $test
+     * @param LinkTemplateCollectionInterface $linkTemplates
      * @return list<ModelProviderInterface>
      * @throws ReflectionException
      */
-    public static function createForChain(Cest $test, array $linkTemplates = []): array
+    public static function createForChain(Cest $test, LinkTemplateCollectionInterface $linkTemplates): array
     {
         /** @var mixed $testClass */
         $testClass = $test->getTestClass();
@@ -86,14 +85,6 @@ final class CestProvider implements ModelProviderInterface
         );
     }
 
-    /**
-     * @deprecated Please, use {@see getDisplayName()} method
-     */
-    public function getTitle(): ?string
-    {
-        return $this->getDisplayName();
-    }
-
     public function getDisplayName(): ?string
     {
         /** @psalm-var mixed $displayName */
@@ -110,6 +101,11 @@ final class CestProvider implements ModelProviderInterface
     }
 
     public function getDescriptionHtml(): ?string
+    {
+        return null;
+    }
+
+    public function getFullName(): ?string
     {
         return null;
     }
