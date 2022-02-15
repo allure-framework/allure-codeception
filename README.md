@@ -31,14 +31,20 @@ extensions:
     enabled:
         - Qameta\Allure\Codeception\AllureCodeception
     config:
-      Qameta\Allure\Codeception\AllureCodeception:
+        Qameta\Allure\Codeception\AllureCodeception:
             outputDirectory: allure-results
+            linkTemplates:
+                issue: https://example.org/issues/%s
 ```
 
 `outputDirectory` is used to store Allure results and will be calculated
 relatively to Codeception output directory (also known as `paths: log` in
 codeception.yml) unless you specify an absolute path. You can traverse up using
 `..` as usual. `outputDirectory` defaults to `allure-results`.
+
+`linkTemplates` is used to process links and generate URLs for them. You can put
+here an `sprintf()`-like template or a name of class to be constructed; such class
+must implement `Qameta\Allure\Setup\LinkTemplateInterface`.
 
 To generate report from your favourite terminal,
 [install](https://github.com/allure-framework/allure-cli#installation)
