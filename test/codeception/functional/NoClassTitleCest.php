@@ -12,7 +12,6 @@ use Qameta\Allure\Codeception\Test\FunctionalTester;
 #[Issue('Issue 1')]
 class NoClassTitleCest
 {
-
     #[DisplayName('Action title')]
     public function makeActionWithTitle(FunctionalTester $I): void
     {

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Qameta\Allure\Codeception\Internal;
 
 use Qameta\Allure\Attribute\AttributeParser;
-use Qameta\Allure\Attribute\LinkTemplateInterface;
+use Qameta\Allure\Setup\LinkTemplateCollectionInterface;
 use Qameta\Allure\Model\Label;
 use Qameta\Allure\Model\ModelProviderInterface;
 use ReflectionException;
@@ -15,21 +15,20 @@ use ReflectionException;
  */
 final class SuiteProvider implements ModelProviderInterface
 {
-
     public function __construct(
         private ?SuiteInfo $suiteInfo,
     ) {
     }
 
     /**
-     * @param SuiteInfo|null                       $suiteInfo
-     * @param array<string, LinkTemplateInterface> $linkTemplates
+     * @param SuiteInfo|null                  $suiteInfo
+     * @param LinkTemplateCollectionInterface $linkTemplates
      * @return list<ModelProviderInterface>
      * @throws ReflectionException
      */
     public static function createForChain(
         ?SuiteInfo $suiteInfo,
-        array $linkTemplates,
+        LinkTemplateCollectionInterface $linkTemplates,
     ): array {
         $providers = [new self($suiteInfo)];
         $suiteClass = $suiteInfo?->getClass();
@@ -62,11 +61,6 @@ final class SuiteProvider implements ModelProviderInterface
         return [];
     }
 
-    public function getTitle(): ?string
-    {
-        return $this->getDisplayName();
-    }
-
     public function getDisplayName(): ?string
     {
         return null;
@@ -78,6 +72,11 @@ final class SuiteProvider implements ModelProviderInterface
     }
 
     public function getDescriptionHtml(): ?string
+    {
+        return null;
+    }
+
+    public function getFullName(): ?string
     {
         return null;
     }

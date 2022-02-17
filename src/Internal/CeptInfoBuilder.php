@@ -8,7 +8,6 @@ use Codeception\Test\Cept;
 
 final class CeptInfoBuilder implements TestInfoBuilderInterface
 {
-
     public function __construct(
         private Cept $test,
     ) {

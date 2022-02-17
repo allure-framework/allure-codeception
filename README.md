@@ -31,14 +31,41 @@ extensions:
     enabled:
         - Qameta\Allure\Codeception\AllureCodeception
     config:
-      Qameta\Allure\Codeception\AllureCodeception:
+        Qameta\Allure\Codeception\AllureCodeception:
             outputDirectory: allure-results
+            linkTemplates:
+                issue: https://example.org/issues/%s
+            setipHook: My\SetupHook
 ```
 
 `outputDirectory` is used to store Allure results and will be calculated
 relatively to Codeception output directory (also known as `paths: log` in
 codeception.yml) unless you specify an absolute path. You can traverse up using
 `..` as usual. `outputDirectory` defaults to `allure-results`.
+
+`linkTemplates` is used to process links and generate URLs for them. You can put
+here an `sprintf()`-like template or a name of class to be constructed; such class
+must implement `Qameta\Allure\Setup\LinkTemplateInterface`.
+
+`setupHook` allows to execute some bootstrapping code during initialization. You can
+put here a name of the class that implements magic `__invoke()` method - and that method
+will be called. For example, it can be used to ignore unnecessary docblock annotations:
+
+```php
+<?php
+
+namespace My;
+
+use Doctrine\Common\Annotations\AnnotationReader;
+
+class SetupHook
+{
+    public function __invoke(): void
+    {
+        AnnotationReader::addGlobalIgnoredName('annotationToIgnore');
+    }
+}
+```
 
 To generate report from your favourite terminal,
 [install](https://github.com/allure-framework/allure-cli#installation)

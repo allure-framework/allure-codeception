@@ -11,7 +11,6 @@ use function class_exists;
  */
 final class SuiteInfo
 {
-
     public function __construct(
         private string $name,
     ) {

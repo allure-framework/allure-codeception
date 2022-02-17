@@ -11,7 +11,6 @@ use Throwable;
 
 interface TestLifecycleInterface
 {
-
     public function switchToSuite(SuiteInfo $suiteInfo): TestLifecycleInterface;
 
     public function resetSuite(): TestLifecycleInterface;

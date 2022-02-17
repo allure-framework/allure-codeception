@@ -9,7 +9,6 @@ use Qameta\Allure\Attribute;
 
 class DataProviderTest extends Unit
 {
-
     /**
      * @dataProvider providerData
      */
@@ -27,6 +26,9 @@ class DataProviderTest extends Unit
         self::assertSame($first, $second);
     }
 
+    /**
+     * @return iterable<int|string, array{string, string}>
+     */
     public function providerData(): iterable
     {
         return [

@@ -10,7 +10,6 @@ use function gethostname;
 
 final class DefaultThreadDetector implements ThreadDetectorInterface
 {
-
     private string|false|null $host = null;
 
     public function getHost(): ?string

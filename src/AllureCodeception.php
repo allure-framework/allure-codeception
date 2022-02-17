@@ -15,18 +15,22 @@ use Codeception\Exception\ConfigurationException;
 use Codeception\Step;
 use Qameta\Allure\Allure;
 use Qameta\Allure\Allure as QametaAllure;
-use Qameta\Allure\Attribute\LinkTemplateInterface;
 use Qameta\Allure\Codeception\Internal\DefaultThreadDetector;
 use Qameta\Allure\Codeception\Internal\SuiteInfo;
 use Qameta\Allure\Codeception\Internal\TestLifecycle;
 use Qameta\Allure\Codeception\Internal\TestLifecycleInterface;
 use Qameta\Allure\Codeception\Setup\ThreadDetectorInterface;
+use Qameta\Allure\Model\LinkType;
 use Qameta\Allure\Model\Status;
 use Qameta\Allure\Model\StatusDetails;
 use Qameta\Allure\Setup\DefaultStatusDetector;
+use Qameta\Allure\Setup\LinkTemplate;
+use Qameta\Allure\Setup\LinkTemplateInterface;
 use Throwable;
 
 use function class_exists;
+use function is_a;
+use function is_array;
 use function is_callable;
 use function is_string;
 use function trim;
@@ -35,9 +39,9 @@ use const DIRECTORY_SEPARATOR;
 
 final class AllureCodeception extends Extension
 {
-
     private const SETUP_HOOK_PARAMETER = 'setupHook';
     private const OUTPUT_DIRECTORY_PARAMETER = 'outputDirectory';
+    private const LINK_TEMPLATES_PARAMETER = 'linkTemplates';
 
     private const DEFAULT_RESULTS_DIRECTORY = 'allure-results';
 
@@ -55,11 +59,6 @@ final class AllureCodeception extends Extension
         Events::STEP_AFTER => 'stepAfter'
     ];
 
-    /**
-     * @var array<string, LinkTemplateInterface>
-     */
-    private array $linkTemplates = [];
-
     private ?ThreadDetectorInterface $threadDetector = null;
 
     private ?TestLifecycleInterface $testLifecycle = null;
@@ -76,9 +75,12 @@ final class AllureCodeception extends Extension
         parent::_initialize();
         QametaAllure::reset();
         QametaAllure::getLifecycleConfigurator()
-            ->setStatusDetector(new StatusDetector(new DefaultStatusDetector()));
+            ->setStatusDetector(new StatusDetector(new DefaultStatusDetector()))
+            ->setOutputDirectory($this->getOutputDirectory());
+        foreach ($this->getLinkTemplates() as $linkType => $linkTemplate) {
+            QametaAllure::getLifecycleConfigurator()->addLinkTemplate($linkType, $linkTemplate);
+        }
         $this->callSetupHook();
-        QametaAllure::setOutputDirectory($this->getOutputDirectory());
     }
 
     private function callSetupHook(): void
@@ -113,6 +115,31 @@ final class AllureCodeception extends Extension
             : null;
 
         return Configuration::outputDir() . ($outputLocal ?? self::DEFAULT_RESULTS_DIRECTORY) . DIRECTORY_SEPARATOR;
+    }
+
+    /**
+     * @psalm-suppress MoreSpecificReturnType
+     * @return iterable<LinkType, LinkTemplate>
+     */
+    private function getLinkTemplates(): iterable
+    {
+        /**
+         * @var mixed $templatesConfig
+         * @psalm-var array $this->config
+         */
+        $templatesConfig = $this->config[self::LINK_TEMPLATES_PARAMETER] ?? [];
+        if (!is_array($templatesConfig)) {
+            $templatesConfig = [];
+        }
+        foreach ($templatesConfig as $linkTypeName => $linkConfig) {
+            if (!is_string($linkConfig) || !is_string($linkTypeName)) {
+                continue;
+            }
+            yield LinkType::fromOptionalString($linkTypeName) =>
+                class_exists($linkConfig) && is_a($linkConfig, LinkTemplateInterface::class, true)
+                    ? new $linkConfig()
+                    : new LinkTemplate($linkConfig);
+        }
     }
 
     /**
@@ -270,10 +297,10 @@ final class AllureCodeception extends Extension
     {
         return $this->testLifecycle ??= new TestLifecycle(
             Allure::getLifecycle(),
-            Allure::getResultFactory(),
-            Allure::getStatusDetector(),
+            Allure::getConfig()->getResultFactory(),
+            Allure::getConfig()->getStatusDetector(),
             $this->getThreadDetector(),
-            $this->linkTemplates,
+            Allure::getConfig()->getLinkTemplates(),
         );
     }
 }

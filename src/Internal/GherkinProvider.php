@@ -16,7 +16,6 @@ use function array_values;
  */
 final class GherkinProvider implements ModelProviderInterface
 {
-
     public function __construct(
         private Gherkin $test,
     ) {
@@ -48,14 +47,6 @@ final class GherkinProvider implements ModelProviderInterface
         return [];
     }
 
-    /**
-     * @deprecated Please use {@see getDisplayName()} method
-     */
-    public function getTitle(): ?string
-    {
-        return $this->getDisplayName();
-    }
-
     public function getDisplayName(): ?string
     {
         return (string) $this->test->toString();
@@ -67,6 +58,11 @@ final class GherkinProvider implements ModelProviderInterface
     }
 
     public function getDescriptionHtml(): ?string
+    {
+        return null;
+    }
+
+    public function getFullName(): ?string
     {
         return null;
     }

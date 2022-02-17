@@ -6,6 +6,5 @@ namespace Qameta\Allure\Codeception\Internal;
 
 interface TestInfoBuilderInterface
 {
-
     public function build(?string $host, ?string $thread): TestInfo;
 }

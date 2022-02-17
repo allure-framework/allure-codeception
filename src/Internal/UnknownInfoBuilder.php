@@ -6,7 +6,6 @@ namespace Qameta\Allure\Codeception\Internal;
 
 final class UnknownInfoBuilder implements TestInfoBuilderInterface
 {
-
     public function __construct(
         private object $test,
     ) {

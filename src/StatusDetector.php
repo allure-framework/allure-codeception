@@ -14,7 +14,6 @@ use Throwable;
 
 final class StatusDetector implements StatusDetectorInterface
 {
-
     public function __construct(
         private StatusDetectorInterface $defaultStatusDetector,
     ) {

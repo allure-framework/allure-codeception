@@ -6,7 +6,6 @@ namespace Qameta\Allure\Codeception\Internal;
 
 final class TestInfo
 {
-
     public function __construct(
         private object $originalTest,
         private string $signature,

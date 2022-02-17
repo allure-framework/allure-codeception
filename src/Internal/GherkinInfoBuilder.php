@@ -10,7 +10,6 @@ use function is_string;
 
 final class GherkinInfoBuilder implements TestInfoBuilderInterface
 {
-
     public function __construct(
         private Gherkin $test,
     ) {

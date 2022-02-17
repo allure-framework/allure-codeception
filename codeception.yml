@@ -13,5 +13,5 @@ extensions:
   config:
     Qameta\Allure\Codeception\AllureCodeception:
       outputDirectory: allure-results
-
-
+      linkTemplates:
+        issue: https://example.org/issues/%s

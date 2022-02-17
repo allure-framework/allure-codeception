@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Qameta\Allure\Codeception\Internal;
 
 use Codeception\Test\Cept;
-use Qameta\Allure\Attribute\LinkTemplateInterface;
+use Qameta\Allure\Setup\LinkTemplateCollectionInterface;
 use Qameta\Allure\Model\Label;
 use Qameta\Allure\Model\Link;
 use Qameta\Allure\Model\LinkType;
@@ -27,7 +27,6 @@ use function trim;
  */
 final class CeptProvider implements ModelProviderInterface
 {
-
     private bool $isLoaded = false;
 
     /**
@@ -45,21 +44,21 @@ final class CeptProvider implements ModelProviderInterface
     private ?string $legacyDescription = null;
 
     /**
-     * @param Cept                                 $test
-     * @param array<string, LinkTemplateInterface> $linkTemplates
+     * @param Cept                            $test
+     * @param LinkTemplateCollectionInterface $linkTemplates
      */
     public function __construct(
         private Cept $test,
-        private array $linkTemplates = [],
+        private LinkTemplateCollectionInterface $linkTemplates,
     ) {
     }
 
     /**
-     * @param Cept                                 $test
-     * @param array<string, LinkTemplateInterface> $linkTemplates
+     * @param Cept                            $test
+     * @param LinkTemplateCollectionInterface $linkTemplates
      * @return list<ModelProviderInterface>
      */
-    public static function createForChain(Cept $test, array $linkTemplates): array
+    public static function createForChain(Cept $test, LinkTemplateCollectionInterface $linkTemplates): array
     {
         return [new self($test, $linkTemplates)];
     }
@@ -83,14 +82,6 @@ final class CeptProvider implements ModelProviderInterface
         return [];
     }
 
-    /**
-     * @deprecated Please use {@see getDisplayName()} method
-     */
-    public function getTitle(): ?string
-    {
-        return $this->getDisplayName();
-    }
-
     public function getDisplayName(): ?string
     {
         $this->loadLegacyModels();
@@ -105,6 +96,11 @@ final class CeptProvider implements ModelProviderInterface
         return is_string($testName)
             ? $testName
             : null;
+    }
+
+    public function getFullName(): ?string
+    {
+        return (string) $this->test->getSignature();
     }
 
     public function getDescription(): ?string
@@ -179,7 +175,7 @@ final class CeptProvider implements ModelProviderInterface
                 $this->getLegacyAnnotations('Stories'),
             ),
         ];
-        $linkTemplate = $this->linkTemplates[(string) LinkType::issue()] ?? null;
+        $linkTemplate = $this->linkTemplates->get(LinkType::issue()) ?? null;
         $this->legacyLinks = array_map(
             fn (string $value): Link => Link::issue($value, $linkTemplate?->buildUrl($value)),
             $this->getLegacyAnnotations('Issues'),
