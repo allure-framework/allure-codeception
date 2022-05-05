@@ -239,7 +239,7 @@ final class TestLifecycle implements TestLifecycleInterface
                 if (!is_string($artifact)) {
                     continue;
                 }
-                $dataSource = @file_exists($artifact) && !is_file($artifact)
+                $dataSource = @file_exists($artifact) && is_file($artifact)
                     ? DataSourceFactory::fromFile($artifact)
                     : DataSourceFactory::fromString($artifact);
                 $this
