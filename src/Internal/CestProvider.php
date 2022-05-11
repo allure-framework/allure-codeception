@@ -105,8 +105,12 @@ final class CestProvider implements ModelProviderInterface
         return null;
     }
 
+    /**
+     * @psalm-suppress MixedOperand
+     * @psalm-suppress MixedArgument
+     */
     public function getFullName(): ?string
     {
-        return null;
+        return get_class($this->test->getTestClass()) . "::" . $this->test->getTestMethod();
     }
 }
