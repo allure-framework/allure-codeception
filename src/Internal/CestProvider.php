@@ -107,6 +107,6 @@ final class CestProvider implements ModelProviderInterface
 
     public function getFullName(): ?string
     {
-        return null;
+        return get_class($this->test->getTestClass()) . "::" . $this->test->getTestMethod();
     }
 }
