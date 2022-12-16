@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Qameta\Allure\Codeception\Internal;
 
-use Codeception\Util\Locator;
+use InvalidArgumentException;
 use Stringable;
 
 use function array_map;
@@ -15,6 +15,7 @@ use function is_object;
 use function is_resource;
 use function is_string;
 use function json_encode;
+use function method_exists;
 use function strtr;
 use function trim;
 
@@ -77,7 +78,7 @@ final class ArgumentAsString implements Stringable
 
         $webdriverByClass = '\Facebook\WebDriver\WebDriverBy';
         if (class_exists($webdriverByClass) && is_a($argument, $webdriverByClass)) {
-            return Locator::humanReadableString($argument);
+            return $this->webDriverByAsString($argument);
         }
 
         return trim($argument::class, "\\");
@@ -89,5 +90,22 @@ final class ArgumentAsString implements Stringable
             $this->prepareArgument($this->argument),
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
         );
+    }
+
+    private function webDriverByAsString(object $selector): string
+    {
+        $type = method_exists($selector, 'getMechanism')
+            ? (string) $selector->getMechanism()
+            : null;
+
+        $locator = method_exists($selector, 'getValue')
+            ? (string) $selector->getValue()
+            : null;
+
+        if (!isset($type, $locator)) {
+            throw new InvalidArgumentException("Unrecognized selector");
+        }
+
+        return "$type '$locator'";
     }
 }

@@ -8,8 +8,8 @@ use Codeception\Step;
 use Codeception\Test\Cept;
 use Codeception\Test\Cest;
 use Codeception\Test\Gherkin;
+use Codeception\Test\TestCaseWrapper;
 use Codeception\TestInterface;
-use PHPUnit\Framework\TestCase;
 use Qameta\Allure\AllureLifecycleInterface;
 use Qameta\Allure\Codeception\Setup\ThreadDetectorInterface;
 use Qameta\Allure\Io\DataSourceFactory;
@@ -60,7 +60,7 @@ final class TestLifecycle implements TestLifecycleInterface
         private ThreadDetectorInterface $threadDetector,
         private LinkTemplateCollectionInterface $linkTemplates,
     ) {
-        /** @var WeakMap<Step, StepStartInfo> */
+        /** @psalm-var WeakMap<Step, StepStartInfo> $this->stepStarts */
         $this->stepStarts = new WeakMap();
     }
 
@@ -119,7 +119,7 @@ final class TestLifecycle implements TestLifecycleInterface
             $test instanceof Cest => new CestInfoBuilder($test),
             $test instanceof Gherkin => new GherkinInfoBuilder($test),
             $test instanceof Cept => new CeptInfoBuilder($test),
-            $test instanceof TestCase => new UnitInfoBuilder($test),
+            $test instanceof TestCaseWrapper => new UnitInfoBuilder($test),
             default => new UnknownInfoBuilder($test),
         };
     }
@@ -168,7 +168,7 @@ final class TestLifecycle implements TestLifecycleInterface
             $test instanceof Cest => CestProvider::createForChain($test, $this->linkTemplates),
             $test instanceof Gherkin => GherkinProvider::createForChain($test),
             $test instanceof Cept => CeptProvider::createForChain($test, $this->linkTemplates),
-            $test instanceof TestCase => UnitProvider::createForChain($test, $this->linkTemplates),
+            $test instanceof TestCaseWrapper => UnitProvider::createForChain($test, $this->linkTemplates),
             default => [],
         };
     }
@@ -323,10 +323,6 @@ final class TestLifecycle implements TestLifecycleInterface
     {
         $stepStart = $this->getCurrentStepStart();
         $this->lifecycle->stopStep($stepStart->getUuid());
-        /**
-         * @var Step $step
-         * @psalm-ignore-var
-         */
         foreach ($this->stepStarts as $step => $storedStart) {
             if ($storedStart === $stepStart) {
                 unset($this->stepStarts[$step]);
@@ -341,15 +337,9 @@ final class TestLifecycle implements TestLifecycleInterface
     {
         $stepStart = $this->getCurrentStepStart();
         $step = $stepStart->getOriginalStep();
-        if (null === $step->getAction()) {
-            $step = $step->getMetaStep();
-        }
 
         $params = [];
-        /**
-         * @var array-key $name
-         * @var mixed $value
-         */
+        /** @psalm-var mixed $value */
         foreach ($step->getArguments() as $name => $value) {
             $params[] = new Parameter(
                 is_int($name) ? "#$name" : $name,

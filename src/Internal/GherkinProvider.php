@@ -49,7 +49,7 @@ final class GherkinProvider implements ModelProviderInterface
 
     public function getDisplayName(): ?string
     {
-        return (string) $this->test->toString();
+        return $this->test->toString();
     }
 
     public function getDescription(): ?string

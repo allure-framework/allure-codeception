@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Qameta\Allure\Codeception\Internal;
 
-use PHPUnit\Framework\TestCase;
+use Closure;
+use Codeception\Test\TestCaseWrapper;
 use Qameta\Allure\Attribute\AttributeParser;
 use Qameta\Allure\Setup\LinkTemplateCollectionInterface;
 use Qameta\Allure\Model\ModelProviderInterface;
@@ -21,32 +22,32 @@ use function is_int;
 final class UnitProvider implements ModelProviderInterface
 {
     /**
-     * @param TestCase                        $test
+     * @param TestCaseWrapper                 $test
      * @param LinkTemplateCollectionInterface $linkTemplates
      */
     public function __construct(
-        private TestCase $test,
+        private TestCaseWrapper $test,
         LinkTemplateCollectionInterface $linkTemplates,
     ) {
     }
 
     /**
-     * @param TestCase                        $test
+     * @param TestCaseWrapper                 $test
      * @param LinkTemplateCollectionInterface $linkTemplates
      * @throws ReflectionException
      * @return list<ModelProviderInterface>
      */
-    public static function createForChain(TestCase $test, LinkTemplateCollectionInterface $linkTemplates): array
+    public static function createForChain(TestCaseWrapper $test, LinkTemplateCollectionInterface $linkTemplates): array
     {
-        /**
-         * @var callable-string|null $methodOrFunction
-         * @psalm-suppress InternalMethod
-         */
-        $methodOrFunction = $test->getName(false);
+        $fields = $test->getReportFields();
+        /** @var class-string $class */
+        $class = $fields['class'] ?? null;
+        /** @var Closure|callable-string|null $methodOrFunction */
+        $methodOrFunction = $test->getMetadata()->getName();
 
         return [
             ...AttributeParser::createForChain(
-                classOrObject: $test,
+                classOrObject: $class,
                 methodOrFunction: $methodOrFunction,
                 linkTemplates: $linkTemplates,
             ),
@@ -69,16 +70,17 @@ final class UnitProvider implements ModelProviderInterface
      */
     public function getParameters(): array
     {
-        /** @psalm-suppress InternalMethod */
-        if (!$this->test->usesDataProvider()) {
+        $testMetadata = $this->test->getMetadata();
+        if (null === $testMetadata->getIndex()) {
             return [];
         }
 
-        $dataMethod = new ReflectionMethod($this->test, 'getProvidedData');
+        $testCase = $this->test->getTestCase();
+
+        $dataMethod = new ReflectionMethod($testCase, 'getProvidedData');
         $dataMethod->setAccessible(true);
-        /** @psalm-suppress InternalMethod */
-        $methodName = $this->test->getName(false);
-        $testMethod = new ReflectionMethod($this->test, $methodName);
+        $methodName = $testMetadata->getName();
+        $testMethod = new ReflectionMethod($testCase, $methodName);
         $argNames = $testMethod->getParameters();
 
         $params = [];
@@ -86,7 +88,7 @@ final class UnitProvider implements ModelProviderInterface
          * @var array-key $key
          * @var mixed $param
          */
-        foreach ($dataMethod->invoke($this->test) as $key => $param) {
+        foreach ($dataMethod->invoke($testCase) as $key => $param) {
             $argName = array_shift($argNames);
             $name = $argName?->getName() ?? $key;
             $params[] = new Parameter(
@@ -100,8 +102,7 @@ final class UnitProvider implements ModelProviderInterface
 
     public function getDisplayName(): ?string
     {
-        /** @psalm-suppress InternalMethod */
-        return $this->test->getName();
+        return $this->test->getMetadata()->getName();
     }
 
     public function getDescription(): ?string
