@@ -12,7 +12,6 @@ use Codeception\Event\SuiteEvent;
 use Codeception\Event\TestEvent;
 use Codeception\Events;
 use Codeception\Exception\ConfigurationException;
-use Codeception\Step;
 use Qameta\Allure\Allure;
 use Qameta\Allure\Allure as QametaAllure;
 use Qameta\Allure\Codeception\Internal\DefaultThreadDetector;
@@ -26,7 +25,6 @@ use Qameta\Allure\Model\StatusDetails;
 use Qameta\Allure\Setup\DefaultStatusDetector;
 use Qameta\Allure\Setup\LinkTemplate;
 use Qameta\Allure\Setup\LinkTemplateInterface;
-use Throwable;
 
 use function class_exists;
 use function is_a;
@@ -46,6 +44,7 @@ final class AllureCodeception extends Extension
     private const DEFAULT_RESULTS_DIRECTORY = 'allure-results';
 
     protected static array $events = [
+        Events::MODULE_INIT => 'moduleInit',
         Events::SUITE_BEFORE => 'suiteBefore',
         Events::SUITE_AFTER => 'suiteAfter',
         Events::TEST_START => 'testStart',
@@ -69,11 +68,11 @@ final class AllureCodeception extends Extension
      * @throws ConfigurationException
      * phpcs:disable PSR2.Methods.MethodDeclaration.Underscore
      */
-    public function _initialize(): void
+    public function moduleInit(): void
     {
-        // phpcs:enable PSR2.Methods.MethodDeclaration.Underscore
-        parent::_initialize();
         QametaAllure::reset();
+        $this->testLifecycle = null;
+        $this->threadDetector = null;
         QametaAllure::getLifecycleConfigurator()
             ->setStatusDetector(new StatusDetector(new DefaultStatusDetector()))
             ->setOutputDirectory($this->getOutputDirectory());
@@ -148,7 +147,11 @@ final class AllureCodeception extends Extension
     public function suiteBefore(SuiteEvent $suiteEvent): void
     {
         /** @psalm-suppress InternalMethod */
-        $suiteName = $suiteEvent->getSuite()->getName();
+        $suiteName = $suiteEvent->getSuite()?->getName();
+        if (!isset($suiteName)) {
+            return;
+        }
+
         $this
             ->getTestLifecycle()
             ->switchToSuite(new SuiteInfo($suiteName));
@@ -185,12 +188,10 @@ final class AllureCodeception extends Extension
      */
     public function testError(FailEvent $failEvent): void
     {
-        /** @var Throwable $error */
-        $error = $failEvent->getFail();
         $this
             ->getTestLifecycle()
             ->switchToTest($failEvent->getTest())
-            ->updateTestFailure($error);
+            ->updateTestFailure($failEvent->getFail());
     }
 
     /**
@@ -198,12 +199,10 @@ final class AllureCodeception extends Extension
      */
     public function testFail(FailEvent $failEvent): void
     {
-        /** @var Throwable $error */
-        $error = $failEvent->getFail();
         $this
             ->getTestLifecycle()
             ->switchToTest($failEvent->getTest())
-            ->updateTestFailure($error, Status::failed());
+            ->updateTestFailure($failEvent->getFail(), Status::failed());
     }
 
     /**
@@ -211,7 +210,6 @@ final class AllureCodeception extends Extension
      */
     public function testIncomplete(FailEvent $failEvent): void
     {
-        /** @var Throwable $error */
         $error = $failEvent->getFail();
         $this
             ->getTestLifecycle()
@@ -228,7 +226,6 @@ final class AllureCodeception extends Extension
      */
     public function testSkipped(FailEvent $failEvent): void
     {
-        /** @var Throwable $error */
         $error = $failEvent->getFail();
         $this
             ->getTestLifecycle()
@@ -269,12 +266,10 @@ final class AllureCodeception extends Extension
      */
     public function stepBefore(StepEvent $stepEvent): void
     {
-        /** @psalm-var Step $step */
-        $step = $stepEvent->getStep();
         $this
             ->getTestLifecycle()
             ->switchToTest($stepEvent->getTest())
-            ->startStep($step)
+            ->startStep($stepEvent->getStep())
             ->updateStep();
     }
 
@@ -283,12 +278,10 @@ final class AllureCodeception extends Extension
      */
     public function stepAfter(StepEvent $stepEvent): void
     {
-        /** @psalm-var Step $step */
-        $step = $stepEvent->getStep();
         $this
             ->getTestLifecycle()
             ->switchToTest($stepEvent->getTest())
-            ->switchToStep($step)
+            ->switchToStep($stepEvent->getStep())
             ->updateStepResult()
             ->stopStep();
     }

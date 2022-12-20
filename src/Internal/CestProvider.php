@@ -16,7 +16,6 @@ use function array_map;
 use function array_values;
 use function is_array;
 use function is_int;
-use function is_object;
 use function is_string;
 
 /**
@@ -37,16 +36,12 @@ final class CestProvider implements ModelProviderInterface
      */
     public static function createForChain(Cest $test, LinkTemplateCollectionInterface $linkTemplates): array
     {
-        /** @var mixed $testClass */
-        $testClass = $test->getTestClass();
-        /** @var mixed $testMethod */
-        $testMethod = $test->getTestMethod();
-        /** @var callable-string|null $callableTestMethod */
-        $callableTestMethod = is_string($testMethod) ? $testMethod : null;
+        /** @psalm-var callable-string $callableTestMethod */
+        $callableTestMethod = $test->getTestMethod();
 
         return [
             ...AttributeParser::createForChain(
-                classOrObject: is_object($testClass) ? $testClass : null,
+                classOrObject: $test->getTestInstance(),
                 methodOrFunction: $callableTestMethod,
                 linkTemplates: $linkTemplates,
             ),
@@ -111,6 +106,6 @@ final class CestProvider implements ModelProviderInterface
      */
     public function getFullName(): ?string
     {
-        return get_class($this->test->getTestClass()) . "::" . $this->test->getTestMethod();
+        return $this->test->getTestInstance()::class . "::" . $this->test->getTestMethod();
     }
 }
