@@ -100,7 +100,7 @@ final class CeptProvider implements ModelProviderInterface
 
     public function getFullName(): ?string
     {
-        return (string) $this->test->getSignature();
+        return $this->test->getSignature();
     }
 
     public function getDescription(): ?string
@@ -118,7 +118,7 @@ final class CeptProvider implements ModelProviderInterface
     private function getLegacyAnnotation(string $name): ?string
     {
         /**
-         * @var mixed $annotations
+         * @psalm-var mixed $annotations
          * @psalm-suppress InvalidArgument
          */
         $annotations = $this->test->getMetadata()->getParam($name);
@@ -140,7 +140,7 @@ final class CeptProvider implements ModelProviderInterface
     private function getLegacyAnnotations(string $name): array
     {
         /**
-         * @var mixed $annotations
+         * @psalm-var mixed $annotations
          * @psalm-suppress InvalidArgument
          */
         $annotations = $this->test->getMetadata()->getParam($name);

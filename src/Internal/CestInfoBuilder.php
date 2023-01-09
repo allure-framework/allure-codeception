@@ -7,7 +7,6 @@ namespace Qameta\Allure\Codeception\Internal;
 use Codeception\Test\Cest;
 
 use function is_int;
-use function is_object;
 use function is_string;
 
 final class CestInfoBuilder implements TestInfoBuilderInterface
@@ -19,16 +18,11 @@ final class CestInfoBuilder implements TestInfoBuilderInterface
 
     public function build(?string $host, ?string $thread): TestInfo
     {
-        /** @var mixed $testClass */
-        $testClass = $this->test->getTestClass();
-        /** @var mixed $testMethod */
-        $testMethod = $this->test->getTestMethod();
-
         return new TestInfo(
             originalTest: $this->test,
-            signature: (string) $this->test->getSignature(),
-            class: is_object($testClass) ? $testClass::class : null,
-            method: is_string($testMethod) ? $testMethod : null,
+            signature: $this->test->getSignature(),
+            class: $this->test->getTestInstance()::class,
+            method: $this->test->getTestMethod(),
             dataLabel: $this->getDataLabel(),
             host: $host,
             thread: $thread,

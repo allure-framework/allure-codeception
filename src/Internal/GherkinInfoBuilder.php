@@ -17,16 +17,11 @@ final class GherkinInfoBuilder implements TestInfoBuilderInterface
 
     public function build(?string $host, ?string $thread): TestInfo
     {
-        /** @psalm-var mixed $className */
-        $className = $this->test->getFeature();
-        /** @psalm-var mixed $methodName */
-        $methodName = $this->test->getScenarioTitle();
-
         return new TestInfo(
             originalTest: $this->test,
-            signature: (string) $this->test->getSignature(),
-            class: is_string($className) ? $className : null,
-            method: is_string($methodName) ? $methodName : null,
+            signature: $this->test->getSignature(),
+            class: $this->test->getFeature(),
+            method: $this->test->getScenarioTitle(),
             host: $host,
             thread: $thread,
         );

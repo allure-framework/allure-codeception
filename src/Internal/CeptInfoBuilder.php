@@ -17,9 +17,9 @@ final class CeptInfoBuilder implements TestInfoBuilderInterface
     {
         return new TestInfo(
             originalTest: $this->test,
-            signature: (string) $this->test->getSignature(),
-            class: (string) $this->test->getName(),
-            method: (string) $this->test->getName(),
+            signature: $this->test->getSignature(),
+            class: $this->test->getName(),
+            method: $this->test->getName(),
             host: $host,
             thread: $thread,
         );

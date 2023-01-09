@@ -89,7 +89,7 @@ class StepsTest extends Unit
                 $this->failure = $failure;
             }
 
-            public function run(ModuleContainer $container = null)
+            public function run(ModuleContainer $container = null): void
             {
                 $this->setFailed(true);
                 Assert::fail($this->failure);
