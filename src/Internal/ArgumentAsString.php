@@ -88,6 +88,7 @@ final class ArgumentAsString implements Stringable
         }
 
         return trim($argument::class, "\\");
+    }
 
     public function __toString(): string
     {
