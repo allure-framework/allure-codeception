@@ -66,6 +66,21 @@ final class ArgumentAsString implements Stringable
             $argument,
         );
     }
+    
+       
+    private function isClosure(object $argument)
+    {
+        return $argument instanceof \Closure;
+    }
+
+    private function prepareObject(object $argument): string
+    {
+        if (!$this->isClosure($argument) && isset($argument->__mocked) && is_object($argument->__mocked)) {
+            $argument = $argument->__mocked;
+        }
+        if ($argument instanceof Stringable) {
+            return (string)$argument;
+        }
 
     private function prepareObject(object $argument): string
     {
