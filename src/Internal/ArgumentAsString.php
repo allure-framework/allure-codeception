@@ -81,23 +81,13 @@ final class ArgumentAsString implements Stringable
         if ($argument instanceof Stringable) {
             return (string)$argument;
         }
-
-    private function prepareObject(object $argument): string
-    {
-        if (isset($argument->__mocked) && is_object($argument->__mocked)) {
-            $argument = $argument->__mocked;
-        }
-        if ($argument instanceof Stringable) {
-            return (string) $argument;
-        }
-
+        
         $webdriverByClass = '\Facebook\WebDriver\WebDriverBy';
         if (class_exists($webdriverByClass) && is_a($argument, $webdriverByClass)) {
             return $this->webDriverByAsString($argument);
         }
 
         return trim($argument::class, "\\");
-    }
 
     public function __toString(): string
     {
