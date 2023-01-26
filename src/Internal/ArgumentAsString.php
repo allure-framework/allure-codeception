@@ -31,7 +31,7 @@ final class ArgumentAsString implements Stringable
 
     public static function get(mixed $argument): string
     {
-        return (string) new self($argument);
+        return (string)new self($argument);
     }
 
     private function prepareArgument(mixed $argument): mixed
@@ -56,19 +56,18 @@ final class ArgumentAsString implements Stringable
      */
     private function prepareResource($argument): string
     {
-        return (string) $argument;
+        return (string)$argument;
     }
 
     private function prepareArray(array $argument): array
     {
         return array_map(
-            fn (mixed $element): mixed => $this->prepareArgument($element),
+            fn(mixed $element): mixed => $this->prepareArgument($element),
             $argument,
         );
     }
-    
-       
-    private function isClosure(object $argument)
+
+    private function isClosure(object $argument): bool
     {
         return $argument instanceof \Closure;
     }
@@ -81,7 +80,6 @@ final class ArgumentAsString implements Stringable
         if ($argument instanceof Stringable) {
             return (string)$argument;
         }
-        
         $webdriverByClass = '\Facebook\WebDriver\WebDriverBy';
         if (class_exists($webdriverByClass) && is_a($argument, $webdriverByClass)) {
             return $this->webDriverByAsString($argument);
@@ -101,11 +99,11 @@ final class ArgumentAsString implements Stringable
     private function webDriverByAsString(object $selector): string
     {
         $type = method_exists($selector, 'getMechanism')
-            ? (string) $selector->getMechanism()
+            ? (string)$selector->getMechanism()
             : null;
 
         $locator = method_exists($selector, 'getValue')
-            ? (string) $selector->getValue()
+            ? (string)$selector->getValue()
             : null;
 
         if (!isset($type, $locator)) {
