@@ -62,20 +62,24 @@ final class ArgumentAsString implements Stringable
     private function prepareArray(array $argument): array
     {
         return array_map(
-            fn (mixed $element): mixed => $this->prepareArgument($element),
+            fn(mixed $element): mixed => $this->prepareArgument($element),
             $argument,
         );
     }
 
+    private function isClosure(object $argument): bool
+    {
+        return $argument instanceof \Closure;
+    }
+
     private function prepareObject(object $argument): string
     {
-        if (isset($argument->__mocked) && is_object($argument->__mocked)) {
+        if (!$this->isClosure($argument) && isset($argument->__mocked) && is_object($argument->__mocked)) {
             $argument = $argument->__mocked;
         }
         if ($argument instanceof Stringable) {
             return (string) $argument;
         }
-
         $webdriverByClass = '\Facebook\WebDriver\WebDriverBy';
         if (class_exists($webdriverByClass) && is_a($argument, $webdriverByClass)) {
             return $this->webDriverByAsString($argument);
