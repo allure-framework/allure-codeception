@@ -297,9 +297,8 @@ final class TestLifecycle implements TestLifecycleInterface
 
     public function startStep(Step $step): self
     {
-        $parent = $this->currentStepStart?->getUuid() ?? $this->currentTestStart?->getTestUuid();
         $stepResult = $this->resultFactory->createStep();
-        $this->lifecycle->startStep($stepResult, $parent);
+        $this->lifecycle->startStep($stepResult);
 
         $stepStart = new StepStartInfo(
             $step,

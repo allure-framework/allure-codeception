@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Qameta\Allure\Codeception\Test;
 
 use PHPUnit\Framework\TestCase;
+use Qameta\Allure\Codeception\Test\Functional\NestedStepsCest;
 use Qameta\Allure\Codeception\Test\Unit\AnnotationTest;
 use Qameta\Allure\Codeception\Test\Unit\StepsTest;
 use Remorhaz\JSON\Data\Value\EncodedJson\NodeValueFactory;
@@ -322,6 +323,36 @@ class ReportTest extends TestCase
                 'testTwoStepsSecondFails',
                 '$.steps[*].name',
                 ['step 1 name', 'step 2 name'],
+            ],
+            'Nested steps: root names' => [
+                NestedStepsCest::class,
+                'makeNestedSteps',
+                '$.steps[*].name',
+                ['Step 1'],
+            ],
+            'Nested steps: level 1 names' => [
+                NestedStepsCest::class,
+                'makeNestedSteps',
+                '$.steps[?(@.name=="Step 1")].steps[*].name',
+                ['i expect condition 1', 'Step 1.1', 'Step 1.2'],
+            ],
+            'Nested steps: level 1.1 names' => [
+                NestedStepsCest::class,
+                'makeNestedSteps',
+                '$.steps..steps[?(@.name=="Step 1.1")].steps[*].name',
+                ['i expect condition 1.1', 'Step 1.1.1'],
+            ],
+            'Nested steps: level 1.1.1 names' => [
+                NestedStepsCest::class,
+                'makeNestedSteps',
+                '$.steps..steps[?(@.name=="Step 1.1.1")].steps[*].name',
+                ['i expect condition 1.1.1'],
+            ],
+            'Nested steps: level 1.2 names' => [
+                NestedStepsCest::class,
+                'makeNestedSteps',
+                '$.steps..steps[?(@.name=="Step 1.2")].steps[*].name',
+                ['i expect condition 1.2'],
             ],
         ];
     }
