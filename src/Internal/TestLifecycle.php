@@ -297,9 +297,8 @@ final class TestLifecycle implements TestLifecycleInterface
 
     public function startStep(Step $step): self
     {
-        $parent = $this->currentStepStart?->getUuid() ?? $this->currentTestStart?->getTestUuid();
         $stepResult = $this->resultFactory->createStep();
-        $this->lifecycle->startStep($stepResult, $parent);
+        $this->lifecycle->startStep($stepResult);
 
         $stepStart = new StepStartInfo(
             $step,
@@ -323,6 +322,10 @@ final class TestLifecycle implements TestLifecycleInterface
     {
         $stepStart = $this->getCurrentStepStart();
         $this->lifecycle->stopStep($stepStart->getUuid());
+        /**
+         * @psalm-var Step $step
+         * @psalm-var StepStartInfo $storedStart
+         */
         foreach ($this->stepStarts as $step => $storedStart) {
             if ($storedStart === $stepStart) {
                 unset($this->stepStarts[$step]);
