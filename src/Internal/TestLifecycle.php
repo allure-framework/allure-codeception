@@ -323,6 +323,10 @@ final class TestLifecycle implements TestLifecycleInterface
     {
         $stepStart = $this->getCurrentStepStart();
         $this->lifecycle->stopStep($stepStart->getUuid());
+        /**
+         * @psalm-var Step $step
+         * @psalm-var StepStartInfo $storedStart
+         */
         foreach ($this->stepStarts as $step => $storedStart) {
             if ($storedStart === $stepStart) {
                 unset($this->stepStarts[$step]);
