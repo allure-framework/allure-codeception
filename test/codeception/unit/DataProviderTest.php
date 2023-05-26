@@ -29,7 +29,7 @@ class DataProviderTest extends Unit
     /**
      * @return iterable<int|string, array{string, string}>
      */
-    public function providerData(): iterable
+    public static function providerData(): iterable
     {
         return [
             0 => ['foo', 'foo'],

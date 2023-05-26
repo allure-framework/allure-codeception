@@ -294,6 +294,7 @@ final class AllureCodeception extends Extension
             Allure::getConfig()->getStatusDetector(),
             $this->getThreadDetector(),
             Allure::getConfig()->getLinkTemplates(),
+            $_ENV,
         );
     }
 }

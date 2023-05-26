@@ -112,7 +112,7 @@ class ReportTest extends TestCase
     /**
      * @return iterable<string, array{string, string, string, string}>
      */
-    public function providerSingleNodeValueStartsFromString(): iterable
+    public static function providerSingleNodeValueStartsFromString(): iterable
     {
         return [
             'Error message in test case without steps' => [
@@ -147,7 +147,7 @@ class ReportTest extends TestCase
     /**
      * @return iterable<string, array{string, string, string, list<mixed>}>
      */
-    public function providerExistingNodeValue(): iterable
+    public static function providerExistingNodeValue(): iterable
     {
         return [
             'Test case title annotation' => [
@@ -172,13 +172,13 @@ class ReportTest extends TestCase
                 AnnotationTest::class,
                 'testStoriesAnnotation',
                 '$.labels[?(@.name=="story")].value',
-                ['Story 1', 'Story 2'],
+                ['Story 2', 'Story 1'],
             ],
             'Test case features annotation' => [
                 AnnotationTest::class,
                 'testFeaturesAnnotation',
                 '$.labels[?(@.name=="feature")].value',
-                ['Feature 1', 'Feature 2'],
+                ['Feature 2', 'Feature 1'],
             ],
             'Successful test case without steps' => [
                 StepsTest::class,

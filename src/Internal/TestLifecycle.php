@@ -13,6 +13,7 @@ use Codeception\TestInterface;
 use Qameta\Allure\AllureLifecycleInterface;
 use Qameta\Allure\Codeception\Setup\ThreadDetectorInterface;
 use Qameta\Allure\Io\DataSourceFactory;
+use Qameta\Allure\Model\EnvProvider;
 use Qameta\Allure\Model\ModelProviderChain;
 use Qameta\Allure\Model\Parameter;
 use Qameta\Allure\Model\ResultFactoryInterface;
@@ -46,19 +47,13 @@ final class TestLifecycle implements TestLifecycleInterface
      */
     private WeakMap $stepStarts;
 
-    /**
-     * @param AllureLifecycleInterface        $lifecycle
-     * @param ResultFactoryInterface          $resultFactory
-     * @param StatusDetectorInterface         $statusDetector
-     * @param ThreadDetectorInterface         $threadDetector
-     * @param LinkTemplateCollectionInterface $linkTemplates
-     */
     public function __construct(
         private AllureLifecycleInterface $lifecycle,
         private ResultFactoryInterface $resultFactory,
         private StatusDetectorInterface $statusDetector,
         private ThreadDetectorInterface $threadDetector,
         private LinkTemplateCollectionInterface $linkTemplates,
+        private array $env,
     ) {
         /** @psalm-var WeakMap<Step, StepStartInfo> $this->stepStarts */
         $this->stepStarts = new WeakMap();
@@ -143,6 +138,7 @@ final class TestLifecycle implements TestLifecycleInterface
     public function updateTest(): self
     {
         $provider = new ModelProviderChain(
+            new EnvProvider($this->env),
             ...SuiteProvider::createForChain($this->getCurrentSuite(), $this->linkTemplates),
             ...TestInfoProvider::createForChain($this->getCurrentTest()),
             ...$this->createModelProvidersForTest($this->getCurrentTest()->getOriginalTest()),
