@@ -4,6 +4,6 @@ vendor/*
 composer.phar
 composer.lock
 /build/
-/test/codeception/_support/_generated/
+/test/codeception*/_support/_generated/
 .phpunit.result.cache
 

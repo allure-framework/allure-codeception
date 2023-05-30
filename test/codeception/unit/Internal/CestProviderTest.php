@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Qameta\Allure\Codeception\Test\Unit;
+namespace Qameta\Allure\Codeception\Test\Unit\Internal;
 
 use Codeception\Test\Cest;
 use Codeception\Test\Unit;
@@ -16,5 +16,12 @@ class CestProviderTest extends Unit
         $cestProvider = new CestProvider($cest);
 
         $this->assertSame(__CLASS__ . '::' . 'a', $cestProvider->getFullName());
+    }
+
+    /**
+     * @psalm-suppress PossiblyUnusedMethod
+     */
+    public function a(): void
+    {
     }
 }

@@ -12,6 +12,10 @@ use Qameta\Allure\Model\StatusDetails;
 use Qameta\Allure\Setup\StatusDetectorInterface;
 use Throwable;
 
+/**
+ * @deprecated This class is not used anymore and will be removed in next major version.
+ * @psalm-suppress UnusedClass
+ */
 final class StatusDetector implements StatusDetectorInterface
 {
     public function __construct(

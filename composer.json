@@ -23,11 +23,10 @@
     "require": {
 	    "php": "^8",
         "ext-json": "*",
-        "codeception/codeception": "^5",
+        "codeception/codeception": "^5.0.3",
         "allure-framework/allure-php-commons": "^2.3.1"
     },
     "require-dev": {
-        "phpunit/phpunit": "^9.5",
         "psalm/plugin-phpunit": "^0.18.4",
         "remorhaz/php-json-data": "^0.5.3",
         "remorhaz/php-json-path": "^0.7.7",
@@ -41,29 +40,34 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Qameta\\Allure\\Codeception\\Test\\Functional\\": "test/codeception/functional/",
-            "Qameta\\Allure\\Codeception\\Test\\Acceptance\\": "test/codeception/acceptance/",
-            "Qameta\\Allure\\Codeception\\Test\\Unit\\": "test/codeception/unit/",
-            "Qameta\\Allure\\Codeception\\Test\\": [
-                "test/codeception/_support/",
-                "test/report/"
-            ]
+            "Qameta\\Allure\\Codeception\\Test\\": "test/codeception/_support/",
+            "Qameta\\Allure\\Codeception\\Test\\Unit\\": [
+                "test/codeception/report-check/",
+                "test/codeception/unit/"
+            ],
+            "Qameta\\Allure\\Codeception\\Test\\Report\\": "test/codeception-report/_support/",
+            "Qameta\\Allure\\Codeception\\Test\\Report\\Functional\\": "test/codeception-report/functional/",
+            "Qameta\\Allure\\Codeception\\Test\\Report\\Acceptance\\": "test/codeception-report/acceptance/",
+            "Qameta\\Allure\\Codeception\\Test\\Report\\Unit\\": "test/codeception-report/unit/"
         }
     },
     "scripts": {
         "build": [
             "vendor/bin/codecept build",
-            "vendor/bin/codecept gherkin:snippets acceptance"
+            "vendor/bin/codecept build -c codeception-report.yml",
+            "vendor/bin/codecept gherkin:snippets acceptance -c codeception-report.yml"
         ],
         "test-cs": "vendor/bin/phpcs -sp",
+        "test-unit": "vendor/bin/codecept run unit --coverage-text",
         "test-report-generate": [
-            "rm -rf ./build/log/",
-            "vendor/bin/codecept run --no-exit --report"
+            "rm -rf ./build/allure-results/",
+            "vendor/bin/codecept run  -c codeception-report.yml --no-exit --report"
         ],
-        "test-report-check": "vendor/bin/phpunit --testsuite=report",
+        "test-report-check": "vendor/bin/codecept run report-check",
         "test-psalm": "vendor/bin/psalm --shepherd",
         "test": [
             "@test-cs",
+            "@test-unit",
             "@test-report-generate",
             "@test-report-check",
             "@test-psalm"

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Qameta\Allure\Codeception\Test;
+namespace Qameta\Allure\Codeception\Test\Report;
 
 use Codeception\Actor;
 

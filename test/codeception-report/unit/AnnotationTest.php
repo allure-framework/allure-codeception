@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Qameta\Allure\Codeception\Test\Unit;
+namespace Qameta\Allure\Codeception\Test\Report\Unit;
 
 use Codeception\Test\Unit;
 use Qameta\Allure\Attribute;
