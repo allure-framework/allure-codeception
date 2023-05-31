@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Qameta\Allure\Codeception\Test;
+namespace Qameta\Allure\Codeception\Test\Unit;
 
-use PHPUnit\Framework\TestCase;
-use Qameta\Allure\Codeception\Test\Functional\NestedStepsCest;
-use Qameta\Allure\Codeception\Test\Unit\AnnotationTest;
-use Qameta\Allure\Codeception\Test\Unit\StepsTest;
+use Codeception\Test\Unit;
+use Qameta\Allure\Codeception\Test\Report\Functional\NestedStepsCest;
+use Qameta\Allure\Codeception\Test\Report\Unit\AnnotationTest;
+use Qameta\Allure\Codeception\Test\Report\Unit\StepsTest;
 use Remorhaz\JSON\Data\Value\EncodedJson\NodeValueFactory;
 use Remorhaz\JSON\Data\Value\NodeValueInterface;
 use Remorhaz\JSON\Path\Processor\Processor;
@@ -25,7 +25,7 @@ use function str_ends_with;
 use const DIRECTORY_SEPARATOR;
 use const PATHINFO_EXTENSION;
 
-class ReportTest extends TestCase
+class ReportTest extends Unit
 {
     /**
      * @var array<string, array<string, NodeValueInterface>>
@@ -38,7 +38,7 @@ class ReportTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        $buildPath = __DIR__ . '/../../build/allure-results';
+        $buildPath = __DIR__ . '/../../../build/allure-results';
         $files = scandir($buildPath);
 
         $jsonValueFactory = NodeValueFactory::create();
@@ -84,7 +84,7 @@ class ReportTest extends TestCase
      * @param string $class
      * @param string $method
      * @param string $jsonPath
-     * @param string $expectedValue
+     * @param non-empty-string $expectedValue
      * @dataProvider providerSingleNodeValueStartsFromString
      */
     public function testSingleNodeValueStartsFromString(
@@ -110,9 +110,9 @@ class ReportTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{string, string, string, string}>
+     * @return iterable<string, array{string, string, string, non-empty-string}>
      */
-    public function providerSingleNodeValueStartsFromString(): iterable
+    public static function providerSingleNodeValueStartsFromString(): iterable
     {
         return [
             'Error message in test case without steps' => [
@@ -147,7 +147,7 @@ class ReportTest extends TestCase
     /**
      * @return iterable<string, array{string, string, string, list<mixed>}>
      */
-    public function providerExistingNodeValue(): iterable
+    public static function providerExistingNodeValue(): iterable
     {
         return [
             'Test case title annotation' => [
@@ -172,13 +172,13 @@ class ReportTest extends TestCase
                 AnnotationTest::class,
                 'testStoriesAnnotation',
                 '$.labels[?(@.name=="story")].value',
-                ['Story 1', 'Story 2'],
+                ['Story 2', 'Story 1'],
             ],
             'Test case features annotation' => [
                 AnnotationTest::class,
                 'testFeaturesAnnotation',
                 '$.labels[?(@.name=="feature")].value',
-                ['Feature 1', 'Feature 2'],
+                ['Feature 2', 'Feature 1'],
             ],
             'Successful test case without steps' => [
                 StepsTest::class,

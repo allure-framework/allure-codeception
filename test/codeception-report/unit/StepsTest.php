@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Qameta\Allure\Codeception\Test\Unit;
+namespace Qameta\Allure\Codeception\Test\Report\Unit;
 
 use Codeception\Lib\ModuleContainer;
 use Codeception\Scenario;
+use Codeception\Step;
 use Codeception\Step\Comment;
 use Codeception\Step\Meta;
 use Codeception\Test\Unit;
 use Exception;
-use PHPUnit\Framework\Assert;
 
 class StepsTest extends Unit
 {
@@ -29,11 +29,13 @@ class StepsTest extends Unit
 
     public function testNoStepsFailure(): void
     {
+        /** @psalm-suppress UndefinedClass */
         self::fail('Failure');
     }
 
     public function testNoStepsSkipped(): void
     {
+        /** @psalm-suppress UndefinedClass */
         self::markTestSkipped('Skipped');
     }
 
@@ -78,12 +80,12 @@ class StepsTest extends Unit
         $scenario->runStep($this->createFailingStep('Step 2 name', 'Failure'));
     }
 
-    private function createFailingStep(string $name, string $failure): \Codeception\Step
+    private function createFailingStep(string $name, string $failure): Step
     {
         return new class ($failure, $name) extends Meta {
-            private $failure;
+            private string $failure;
 
-            public function __construct(string $failure, $action, array $arguments = [])
+            public function __construct(string $failure, string $action, array $arguments = [])
             {
                 parent::__construct($action, $arguments);
                 $this->failure = $failure;
@@ -92,7 +94,7 @@ class StepsTest extends Unit
             public function run(ModuleContainer $container = null): void
             {
                 $this->setFailed(true);
-                Assert::fail($this->failure);
+                Unit::fail($this->failure);
             }
         };
     }

@@ -74,7 +74,6 @@ final class AllureCodeception extends Extension
         $this->testLifecycle = null;
         $this->threadDetector = null;
         QametaAllure::getLifecycleConfigurator()
-            ->setStatusDetector(new StatusDetector(new DefaultStatusDetector()))
             ->setOutputDirectory($this->getOutputDirectory());
         foreach ($this->getLinkTemplates() as $linkType => $linkTemplate) {
             QametaAllure::getLifecycleConfigurator()->addLinkTemplate($linkType, $linkTemplate);
@@ -191,7 +190,10 @@ final class AllureCodeception extends Extension
         $this
             ->getTestLifecycle()
             ->switchToTest($failEvent->getTest())
-            ->updateTestFailure($failEvent->getFail());
+            ->updateTestFailure(
+                $failEvent->getFail(),
+                Status::broken(),
+            );
     }
 
     /**
@@ -199,10 +201,15 @@ final class AllureCodeception extends Extension
      */
     public function testFail(FailEvent $failEvent): void
     {
+        $error = $failEvent->getFail();
         $this
             ->getTestLifecycle()
             ->switchToTest($failEvent->getTest())
-            ->updateTestFailure($failEvent->getFail(), Status::failed());
+            ->updateTestFailure(
+                $failEvent->getFail(),
+                Status::failed(),
+                new StatusDetails(message: $error->getMessage(), trace: $error->getTraceAsString()),
+            );
     }
 
     /**
@@ -294,6 +301,7 @@ final class AllureCodeception extends Extension
             Allure::getConfig()->getStatusDetector(),
             $this->getThreadDetector(),
             Allure::getConfig()->getLinkTemplates(),
+            $_ENV,
         );
     }
 }

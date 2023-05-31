@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Qameta\Allure\Codeception\Test;
+namespace Qameta\Allure\Codeception\Test\Report;
 
 use Behat\Gherkin\Node\TableNode;
 use Codeception\Actor;
-use PHPUnit\Framework\Assert;
+use Codeception\Test\Unit;
 
 use function abs;
 use function array_map;
@@ -62,7 +62,7 @@ class AcceptanceTester extends Actor
      */
     public function iShouldGetOutputAs($num)
     {
-        Assert::assertSame([(int) $num], $this->outputs);
+        Unit::assertSame([(int) $num], $this->outputs);
     }
 
     /**
@@ -92,7 +92,7 @@ class AcceptanceTester extends Actor
     public function iShouldGetNonNegativeOutputs()
     {
         foreach ($this->outputs as $num) {
-            Assert::assertGreaterThanOrEqual(0, $num);
+            Unit::assertGreaterThanOrEqual(0, $num);
         }
     }
 }

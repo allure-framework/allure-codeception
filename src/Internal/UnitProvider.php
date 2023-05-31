@@ -117,6 +117,6 @@ final class UnitProvider implements ModelProviderInterface
 
     public function getFullName(): ?string
     {
-        return null;
+        return $this->test->getTestCase()::class . '::' . $this->test->getMetadata()->getName();
     }
 }

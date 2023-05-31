@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Qameta\Allure\Codeception\Test\Functional;
+namespace Qameta\Allure\Codeception\Test\Report\Functional;
 
 use Codeception\Example;
 use Qameta\Allure\Attribute\DisplayName;
 use Qameta\Allure\Attribute\Issue;
-use Qameta\Allure\Codeception\Test\FunctionalTester;
+use Qameta\Allure\Codeception\Test\Report\FunctionalTester;
 
 #[Issue('Issue 1')]
 class NoClassTitleCest

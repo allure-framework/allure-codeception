@@ -10,10 +10,10 @@
 
 declare(strict_types=1);
 
-namespace Qameta\Allure\Codeception\Test\Functional;
+namespace Qameta\Allure\Codeception\Test\Report\Functional;
 
 use Codeception\Scenario;
-use Qameta\Allure\Codeception\Test\FunctionalTester;
+use Qameta\Allure\Codeception\Test\Report\FunctionalTester;
 
 /** @var Scenario $scenario */
 $I = new FunctionalTester($scenario);
