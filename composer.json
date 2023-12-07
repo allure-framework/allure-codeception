@@ -2,7 +2,7 @@
     "name": "allure-framework/allure-codeception",
     "keywords":["codeception", "testing", "report", "steps", "attachments", "cases", "allure"],
     "description": "Allure Codeception integration",
-    "homepage": "http://allure.qatools.ru/",
+    "homepage": "https://allurereport.org/",
     "license": "Apache-2.0",
     "authors": [
         {
