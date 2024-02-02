@@ -44,7 +44,6 @@ final class AllureCodeception extends Extension
     private const DEFAULT_RESULTS_DIRECTORY = 'allure-results';
 
     protected static array $events = [
-        Events::MODULE_INIT => 'moduleInit',
         Events::SUITE_BEFORE => 'suiteBefore',
         Events::SUITE_AFTER => 'suiteAfter',
         Events::TEST_START => 'testStart',
