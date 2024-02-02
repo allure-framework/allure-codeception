@@ -68,7 +68,7 @@ final class AllureCodeception extends Extension
      * @throws ConfigurationException
      * phpcs:disable PSR2.Methods.MethodDeclaration.Underscore
      */
-    public function moduleInit(): void
+    public function _initialize(): void
     {
         QametaAllure::reset();
         $this->testLifecycle = null;
