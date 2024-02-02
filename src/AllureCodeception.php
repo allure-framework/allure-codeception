@@ -44,7 +44,6 @@ final class AllureCodeception extends Extension
     private const DEFAULT_RESULTS_DIRECTORY = 'allure-results';
 
     protected static array $events = [
-        Events::MODULE_INIT => 'moduleInit',
         Events::SUITE_BEFORE => 'suiteBefore',
         Events::SUITE_AFTER => 'suiteAfter',
         Events::TEST_START => 'testStart',
@@ -68,7 +67,7 @@ final class AllureCodeception extends Extension
      * @throws ConfigurationException
      * phpcs:disable PSR2.Methods.MethodDeclaration.Underscore
      */
-    public function moduleInit(): void
+    public function _initialize(): void
     {
         QametaAllure::reset();
         $this->testLifecycle = null;
