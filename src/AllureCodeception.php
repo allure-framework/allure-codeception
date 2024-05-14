@@ -68,7 +68,21 @@ final class AllureCodeception extends Extension
      * @throws ConfigurationException
      * phpcs:disable PSR2.Methods.MethodDeclaration.Underscore
      */
+    public function _initialize(): void
+    {
+        parent::_initialize();
+        $this->reconfigure();
+    }
+
+    /**
+     * @throws ConfigurationException
+     */
     public function moduleInit(): void
+    {
+        $this->reconfigure();
+    }
+
+    private function reconfigure(): void
     {
         QametaAllure::reset();
         $this->testLifecycle = null;
