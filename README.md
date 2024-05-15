@@ -35,7 +35,7 @@ extensions:
             outputDirectory: allure-results
             linkTemplates:
                 issue: https://example.org/issues/%s
-            setipHook: My\SetupHook
+            setupHook: My\SetupHook
 ```
 
 `outputDirectory` is used to store Allure results and will be calculated
