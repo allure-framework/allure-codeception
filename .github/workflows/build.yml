@@ -20,6 +20,7 @@ jobs:
           - "8.0"
           - "8.1"
           - "8.2"
+          - "8.3"
         os:
           - ubuntu-latest
           - windows-latest
@@ -29,10 +30,7 @@ jobs:
           - "--prefer-lowest"
     steps:
       - name: Checkout
-        uses: actions/checkout@v3.5.0
-
-      - name: Validate composer.json and composer.lock
-        run: composer validate
+        uses: actions/checkout@v4
 
       - name: Set up PHP ${{ matrix.php-version }}
         uses: shivammathur/setup-php@v2
@@ -42,6 +40,9 @@ jobs:
           coverage: xdebug
           ini-values: error_reporting=E_ALL
 
+      - name: Validate composer.json and composer.lock
+        run: composer validate
+
       - name: Install dependencies
         run: composer update
           --prefer-dist
@@ -49,10 +50,4 @@ jobs:
           ${{ matrix.composer-options }}
 
       - name: Run tests
-        if: ${{ matrix.php-version != '8.2' }}
-        run: composer test
-
-      - name: Run tests (experimental)
-        if: ${{ matrix.php-version == '8.2' }}
-        continue-on-error: true
         run: composer test
