@@ -19,11 +19,15 @@ final class CestInfoBuilder implements TestInfoBuilderInterface
     #[\Override]
     public function build(?string $host, ?string $thread): TestInfo
     {
+        $class = $this->test->getTestInstance()::class;
+        $titlePath = ModelFunctions::getTitlePathByClass($class);
+
         return new TestInfo(
             originalTest: $this->test,
             signature: $this->test->getSignature(),
-            class: $this->test->getTestInstance()::class,
+            class: $class,
             method: $this->test->getTestMethod(),
+            titlePath: $titlePath,
             dataLabel: $this->getDataLabel(),
             host: $host,
             thread: $thread,

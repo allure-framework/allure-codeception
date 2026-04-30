@@ -33,6 +33,7 @@ final class UnitInfoBuilder implements TestInfoBuilderInterface
             signature: $this->test->getSignature(),
             class: $class ?? null,
             method: $this->test->getMetadata()->getName(),
+            titlePath: ModelFunctions::getTitlePathByClass($class),
             dataLabel: $dataLabel,
             host: $host,
             thread: $thread,

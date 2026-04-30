@@ -362,6 +362,30 @@ final class ReportTest extends Unit
                 ),
                 ['i expect condition 1.2'],
             ],
+            'Title path of a unit test result' => [
+                AnnotationTest::class,
+                'testTitleAnnotation',
+                '$.titlePath',
+                [["Qameta", "Allure", "Codeception", "Test", "Report", "Unit", "AnnotationTest"]],
+            ],
+            'Title path of a Cept result' => [
+                "BasicScenario",
+                'BasicScenario',
+                '$.titlePath',
+                [["test", "codeception-report", "functional"]],
+            ],
+            'Title path of a Cest result' => [
+                NestedStepsCest::class,
+                'makeNestedSteps',
+                '$.titlePath',
+                [["Qameta", "Allure", "Codeception", "Test", "Report", "Functional", "NestedStepsCest"]],
+            ],
+            'Title path of a Gherkin result' => [
+                "Calculate absolute number",
+                'negative number',
+                '$.titlePath',
+                [["test", "codeception-report", "acceptance", "Calculate absolute number"]],
+            ],
         ];
     }
 

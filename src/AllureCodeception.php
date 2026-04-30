@@ -311,12 +311,13 @@ final class AllureCodeception extends Extension
     private function getTestLifecycle(): TestLifecycleInterface
     {
         return $this->testLifecycle ??= new TestLifecycle(
-            Allure::getLifecycle(),
-            Allure::getConfig()->getResultFactory(),
-            Allure::getConfig()->getStatusDetector(),
-            $this->getThreadDetector(),
-            Allure::getConfig()->getLinkTemplates(),
-            $_ENV,
+            rootDir: $this->getRootDir(),
+            lifecycle: Allure::getLifecycle(),
+            resultFactory: Allure::getConfig()->getResultFactory(),
+            statusDetector: Allure::getConfig()->getStatusDetector(),
+            threadDetector: $this->getThreadDetector(),
+            linkTemplates: Allure::getConfig()->getLinkTemplates(),
+            env: $_ENV,
         );
     }
 }
