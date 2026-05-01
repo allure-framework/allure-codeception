@@ -98,7 +98,7 @@ final class ReportTest extends Unit
             'Error message in test case without steps' => [
                 StepsTest::class,
                 'testNoStepsError',
-                fn (object $tr): mixed => self::property(self::objectProperty($tr, 'statusDetails'), 'message'),
+                fn (object $tr): mixed => self::statusMessage($tr),
                 "Error\nException(0)",
             ],
         ];
@@ -168,7 +168,7 @@ final class ReportTest extends Unit
             'Successful test case without steps: no steps' => [
                 StepsTest::class,
                 'testNoStepsSuccess',
-                fn (object $tr): mixed => self::objectListProperty($tr, 'steps'),
+                fn (object $tr): mixed => self::steps($tr),
                 [],
             ],
             'Error in test case without steps' => [
@@ -180,7 +180,7 @@ final class ReportTest extends Unit
             'Failure message in test case without steps' => [
                 StepsTest::class,
                 'testNoStepsFailure',
-                fn (object $tr): mixed => self::property(self::objectProperty($tr, 'statusDetails'), 'message'),
+                fn (object $tr): mixed => self::statusMessage($tr),
                 'Failure',
             ],
             'Test case without steps skipped' => [
@@ -192,7 +192,7 @@ final class ReportTest extends Unit
             'Skipped message in test case without steps' => [
                 StepsTest::class,
                 'testNoStepsSkipped',
-                fn (object $tr): mixed => self::property(self::objectProperty($tr, 'statusDetails'), 'message'),
+                fn (object $tr): mixed => self::statusMessage($tr),
                 'Skipped',
             ],
             'Successful test case with single step: status' => [
@@ -248,7 +248,7 @@ final class ReportTest extends Unit
                 'testTwoSuccessfulSteps',
                 fn (object $tr): mixed => array_map(
                     fn (object $s): mixed => self::property($s, 'status'),
-                    self::objectListProperty($tr, 'steps'),
+                    self::steps($tr),
                 ),
                 ['passed', 'passed'],
             ],
@@ -257,7 +257,7 @@ final class ReportTest extends Unit
                 'testTwoSuccessfulSteps',
                 fn (object $tr): mixed => array_map(
                     fn (object $s): mixed => self::property($s, 'name'),
-                    self::objectListProperty($tr, 'steps'),
+                    self::steps($tr),
                 ),
                 ['step 1 name', 'step 2 name'],
             ],
@@ -270,7 +270,7 @@ final class ReportTest extends Unit
             'First step in test case with two steps fails: message' => [
                 StepsTest::class,
                 'testTwoStepsFirstFails',
-                fn (object $tr): mixed => self::property(self::objectProperty($tr, 'statusDetails'), 'message'),
+                fn (object $tr): mixed => self::statusMessage($tr),
                 'Failure',
             ],
             'First step in test case with two steps fails: step status' => [
@@ -294,7 +294,7 @@ final class ReportTest extends Unit
             'Second step in test case with two steps fails: message' => [
                 StepsTest::class,
                 'testTwoStepsSecondFails',
-                fn (object $tr): mixed => self::property(self::objectProperty($tr, 'statusDetails'), 'message'),
+                fn (object $tr): mixed => self::statusMessage($tr),
                 'Failure',
             ],
             'Second step in test case with two steps fails: step status' => [
@@ -302,7 +302,7 @@ final class ReportTest extends Unit
                 'testTwoStepsSecondFails',
                 fn (object $tr): mixed => array_map(
                     fn (object $s): mixed => self::property($s, 'status'),
-                    self::objectListProperty($tr, 'steps'),
+                    self::steps($tr),
                 ),
                 ['passed', 'failed'],
             ],
@@ -310,8 +310,8 @@ final class ReportTest extends Unit
                 StepsTest::class,
                 'testTwoStepsSecondFails',
                 fn (object $tr): mixed => array_map(
-                    fn (object $s): mixed => self::property($s, 'name'),
-                    self::objectListProperty($tr, 'steps'),
+                    fn (object $s): mixed => self::allureName($s),
+                    self::steps($tr),
                 ),
                 ['step 1 name', 'step 2 name'],
             ],
@@ -326,7 +326,7 @@ final class ReportTest extends Unit
                 'makeNestedSteps',
                 fn (object $tr): mixed => array_map(
                     fn (object $s): mixed => self::property($s, 'name'),
-                    self::objectListProperty(self::singleStep($tr), 'steps'),
+                    self::steps(self::singleStep($tr)),
                 ),
                 ['i expect condition 1', 'Step 1.1', 'Step 1.2'],
             ],
@@ -335,7 +335,7 @@ final class ReportTest extends Unit
                 'makeNestedSteps',
                 fn (object $tr): mixed => array_map(
                     fn (object $s): mixed => self::property($s, 'name'),
-                    self::objectListProperty(self::findStep(self::singleStep($tr), "Step 1.1"), 'steps'),
+                    self::steps(self::findStep(self::singleStep($tr), "Step 1.1")),
                 ),
                 ['i expect condition 1.1', 'Step 1.1.1'],
             ],
@@ -357,10 +357,34 @@ final class ReportTest extends Unit
                 NestedStepsCest::class,
                 'makeNestedSteps',
                 fn (object $tr): mixed => array_map(
-                    fn (object $s): mixed => self::property($s, 'name'),
-                    self::objectListProperty(self::findStep(self::singleStep($tr), "Step 1.2"), 'steps'),
+                    fn (object $s): mixed => self::allureName($s),
+                    self::steps(self::findStep(self::singleStep($tr), "Step 1.2")),
                 ),
                 ['i expect condition 1.2'],
+            ],
+            'Title path of a unit test result' => [
+                AnnotationTest::class,
+                'testTitleAnnotation',
+                fn (object $tr): mixed => $tr->titlePath,
+                ["Qameta", "Allure", "Codeception", "Test", "Report", "Unit", "AnnotationTest"],
+            ],
+            'Title path of a Cept result' => [
+                "BasicScenario",
+                'BasicScenario',
+                fn (object $tr): mixed => $tr->titlePath,
+                ["test", "codeception-report", "functional"],
+            ],
+            'Title path of a Cest result' => [
+                NestedStepsCest::class,
+                'makeNestedSteps',
+                fn (object $tr): mixed => $tr->titlePath,
+                ["Qameta", "Allure", "Codeception", "Test", "Report", "Functional", "NestedStepsCest"],
+            ],
+            'Title path of a Gherkin result' => [
+                "Calculate absolute number",
+                'negative number',
+                fn (object $tr): mixed => $tr->titlePath,
+                ["test", "codeception-report", "acceptance", "Calculate absolute number"],
             ],
         ];
     }
@@ -444,6 +468,15 @@ final class ReportTest extends Unit
         return $value->{$property};
     }
 
+    private static function stringProperty(object $value, string $property): string
+    {
+        $result = self::property($value, $property);
+
+        self::assertIsString($result);
+
+        return $result;
+    }
+
     private static function objectProperty(object $value, string $property): object
     {
         $result = self::property($value, $property);
@@ -462,5 +495,26 @@ final class ReportTest extends Unit
 
         /** @var list<object> */
         return array_values($result);
+    }
+
+    private static function allureName(object $value): string
+    {
+        return self::stringProperty($value, "name");
+    }
+
+    private static function statusMessage(object $value): string
+    {
+        return self::stringProperty(
+            self::objectProperty($value, "statusDetails"),
+            "message",
+        );
+    }
+
+    /**
+     * @return list<object>
+     */
+    private static function steps(object $parent): array
+    {
+        return self::objectListProperty($parent, "steps");
     }
 }

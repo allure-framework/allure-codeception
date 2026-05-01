@@ -48,6 +48,7 @@ final class TestLifecycle implements TestLifecycleInterface
     private WeakMap $stepStarts;
 
     public function __construct(
+        private string $rootDir,
         private AllureLifecycleInterface $lifecycle,
         private ResultFactoryInterface $resultFactory,
         private StatusDetectorInterface $statusDetector,
@@ -115,8 +116,8 @@ final class TestLifecycle implements TestLifecycleInterface
     {
         return match (true) {
             $test instanceof Cest => new CestInfoBuilder($test),
-            $test instanceof Gherkin => new GherkinInfoBuilder($test),
-            $test instanceof Cept => new CeptInfoBuilder($test),
+            $test instanceof Gherkin => new GherkinInfoBuilder($this->rootDir, $test),
+            $test instanceof Cept => new CeptInfoBuilder($this->rootDir, $test),
             $test instanceof TestCaseWrapper => new UnitInfoBuilder($test),
             default => new UnknownInfoBuilder($test),
         };
@@ -142,16 +143,18 @@ final class TestLifecycle implements TestLifecycleInterface
     #[\Override]
     public function updateTest(): self
     {
+        $test = $this->getCurrentTest();
         $provider = new ModelProviderChain(
             new EnvProvider($this->env),
             ...SuiteProvider::createForChain($this->getCurrentSuite(), $this->linkTemplates),
-            ...TestInfoProvider::createForChain($this->getCurrentTest()),
-            ...$this->createModelProvidersForTest($this->getCurrentTest()->getOriginalTest()),
+            ...TestInfoProvider::createForChain($test),
+            ...$this->createModelProvidersForTest($test->getOriginalTest()),
         );
         $this->lifecycle->updateTest(
             fn (TestResult $t) => $t
                 ->setName($provider->getDisplayName())
                 ->setFullName($provider->getFullName())
+                ->setTitlePath(...$test->getTitlePath())
                 ->setDescription($provider->getDescription())
                 ->setDescriptionHtml($provider->getDescriptionHtml())
                 ->addLinks(...$provider->getLinks())

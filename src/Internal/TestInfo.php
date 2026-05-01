@@ -6,11 +6,15 @@ namespace Qameta\Allure\Codeception\Internal;
 
 final class TestInfo
 {
+    /**
+     * @param list<string> $titlePath
+     */
     public function __construct(
         private object $originalTest,
         private string $signature,
         private ?string $class = null,
         private ?string $method = null,
+        private array $titlePath = [],
         private ?string $dataLabel = null,
         private ?string $host = null,
         private ?string $thread = null,
@@ -35,6 +39,14 @@ final class TestInfo
     public function getMethod(): ?string
     {
         return $this->method;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getTitlePath(): array
+    {
+        return $this->titlePath;
     }
 
     public function getDataLabel(): ?string
