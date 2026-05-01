@@ -12,7 +12,7 @@ use function str_replace;
 
 use const DIRECTORY_SEPARATOR;
 
-class ModelFunctionsTest extends Unit
+final class ModelFunctionsTest extends Unit
 {
     /**
      * @dataProvider providerGetTitlePathByFile
@@ -55,8 +55,11 @@ class ModelFunctionsTest extends Unit
         // Quick Windows hack
         $base = str_replace("/", DIRECTORY_SEPARATOR, $base);
         $cwdRelPath = str_replace("/", DIRECTORY_SEPARATOR, $cwdRelPath);
+        $cwd = getcwd();
 
-        $path = getcwd() . DIRECTORY_SEPARATOR . $cwdRelPath;
+        self::assertIsString($cwd);
+
+        $path = $cwd . DIRECTORY_SEPARATOR . $cwdRelPath;
 
         self::assertSame($expectedTitlePath, ModelFunctions::getTitlePathByFile($base, $path));
     }

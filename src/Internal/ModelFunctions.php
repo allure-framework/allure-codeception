@@ -35,7 +35,10 @@ final class ModelFunctions
             // or is not an absolute path.
             // Fallback to CWD if not yet in fallback mode
             if (!$final) {
-                return self::getTitlePathByFile(getcwd(), $path, true);
+                $cwd = getcwd();
+                if ($cwd !== false) {
+                    return self::getTitlePathByFile($cwd, $path, true);
+                }
             }
 
             // CWD didn't work too. Turn the absolute path into titlePath.

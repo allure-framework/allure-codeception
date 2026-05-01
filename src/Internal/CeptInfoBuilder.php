@@ -22,7 +22,9 @@ final class CeptInfoBuilder implements TestInfoBuilderInterface
     {
         // May contain .. if the config is not in a parent directory.
         $filePath = realpath($this->test->getFileName());
-        $titlePath = ModelFunctions::getTitlePathByFile($this->rootDir, $filePath);
+        $titlePath = $filePath !== false
+            ? ModelFunctions::getTitlePathByFile($this->rootDir, $filePath)
+            : [];
 
         // A cept file is a single test, so we're removing the file node from titlePath.
         array_pop($titlePath);

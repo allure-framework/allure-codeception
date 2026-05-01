@@ -26,7 +26,9 @@ final class GherkinInfoBuilder implements TestInfoBuilderInterface
         /**
          * @var list<string>
          */
-        $titlePath = ModelFunctions::getTitlePathByFile($this->rootDir, $filePath);
+        $titlePath = $filePath !== false
+            ? ModelFunctions::getTitlePathByFile($this->rootDir, $filePath)
+            : [];
 
         $featureName = $this->test->getFeature();
         if ($featureName) {
