@@ -9,6 +9,9 @@ on:
       - 'main'
       - 'hotfix-*'
 
+permissions:
+  contents: read
+
 jobs:
   tests:
     name: Test on ${{ matrix.os }} php${{ matrix.php-version }}
