@@ -36,8 +36,8 @@ final class GherkinProvider implements ModelProviderInterface
         return array_map(
             fn (string $value) => Label::feature($value),
             [
-                ...array_values($this->test->getFeatureNode()->getTags()),
-                ...array_values($this->test->getScenarioNode()->getTags()),
+                ...$this->test->getFeatureNode()->getTags(),
+                ...$this->test->getScenarioNode()->getTags(),
             ],
         );
     }

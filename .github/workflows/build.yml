@@ -9,10 +9,41 @@ on:
       - 'main'
       - 'hotfix-*'
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
+  static-checks:
+    name: Run static checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+
+      - name: Validate composer.json
+        run: composer validate
+
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-progress
+
+      - name: Run PHP_CodeSniffer
+        run: vendor/bin/phpcs -sp
+
+      - name: Run Psalm
+        run: vendor/bin/psalm --shepherd
+
   tests:
-    name: PHP ${{ matrix.php-version }} on ${{ matrix.os }} (${{ matrix.composer-options }})
-    runs-on: ${{ matrix.os }}
+    name: Test on ${{ matrix.os }} php${{ matrix.php-version }}
+    runs-on: ${{ matrix.os }}-latest
     strategy:
       fail-fast: false
       matrix:
@@ -22,15 +53,13 @@ jobs:
           - "8.2"
           - "8.3"
         os:
-          - ubuntu-latest
-          - windows-latest
-          - macOS-latest
-        composer-options:
-          - ""
-          - "--prefer-lowest"
+          - ubuntu
+          - windows
+          - macOS
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up PHP ${{ matrix.php-version }}
         uses: shivammathur/setup-php@v2
@@ -40,14 +69,21 @@ jobs:
           coverage: xdebug
           ini-values: error_reporting=E_ALL
 
-      - name: Validate composer.json and composer.lock
-        run: composer validate
-
       - name: Install dependencies
-        run: composer update
-          --prefer-dist
-          --no-progress
-          ${{ matrix.composer-options }}
+        run: composer update --prefer-dist --no-progress
 
-      - name: Run tests
-        run: composer test
+      - name: Show Codeception version
+        run: |
+          echo "Tested against Codeception **v$(
+            composer show codeception/codeception --format json | jq -r '.versions[0]'
+          )**" >> "$GITHUB_STEP_SUMMARY"
+        shell: bash
+
+      - name: Run unit tests tests
+        run: composer test-unit
+
+      - name: Run samples
+        run: composer test-report-generate
+
+      - name: Assert samples
+        run: composer test-report-check

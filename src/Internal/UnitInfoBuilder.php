@@ -22,10 +22,15 @@ final class UnitInfoBuilder implements TestInfoBuilderInterface
         $index = $this->test->getMetadata()->getIndex();
         $dataLabel = is_int($index) ? "#$index" : $index;
 
+        /**
+         * @var null|string
+         */
+        $class = $fields['class'];
+
         return new TestInfo(
             originalTest: $this->test,
             signature: $this->test->getSignature(),
-            class: $fields['class'] ?? null,
+            class: $class ?? null,
             method: $this->test->getMetadata()->getName(),
             dataLabel: $dataLabel,
             host: $host,

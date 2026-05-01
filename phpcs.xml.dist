@@ -4,6 +4,8 @@
 
     <file>src</file>
     <file>test</file>
+    <exclude-pattern>test/codeception/_support/_generated/*</exclude-pattern>
+    <exclude-pattern>test/codeception-report/_support/_generated/*</exclude-pattern>
 
     <arg name="colors"/>
 
