@@ -79,6 +79,7 @@ final class TestLifecycle implements TestLifecycleInterface
         return $this->currentStepStart ?? throw new RuntimeException("Current step start not found");
     }
 
+    #[\Override]
     public function switchToSuite(SuiteInfo $suiteInfo): self
     {
         $this->currentSuite = $suiteInfo;
@@ -86,6 +87,7 @@ final class TestLifecycle implements TestLifecycleInterface
         return $this;
     }
 
+    #[\Override]
     public function resetSuite(): self
     {
         $this->currentSuite = null;
@@ -93,6 +95,7 @@ final class TestLifecycle implements TestLifecycleInterface
         return $this;
     }
 
+    #[\Override]
     public function switchToTest(object $test): self
     {
         $thread = $this->threadDetector->getThread();
@@ -119,6 +122,7 @@ final class TestLifecycle implements TestLifecycleInterface
         };
     }
 
+    #[\Override]
     public function create(): self
     {
         $containerResult = $this->resultFactory->createContainer();
@@ -135,6 +139,7 @@ final class TestLifecycle implements TestLifecycleInterface
         return $this;
     }
 
+    #[\Override]
     public function updateTest(): self
     {
         $provider = new ModelProviderChain(
@@ -169,6 +174,7 @@ final class TestLifecycle implements TestLifecycleInterface
         };
     }
 
+    #[\Override]
     public function startTest(): self
     {
         $this->lifecycle->startTest($this->getCurrentTestStart()->getTestUuid());
@@ -176,6 +182,7 @@ final class TestLifecycle implements TestLifecycleInterface
         return $this;
     }
 
+    #[\Override]
     public function stopTest(): self
     {
         $testUuid = $this->getCurrentTestStart()->getTestUuid();
@@ -196,6 +203,7 @@ final class TestLifecycle implements TestLifecycleInterface
         return $this;
     }
 
+    #[\Override]
     public function updateTestFailure(
         Throwable $error,
         ?Status $status = null,
@@ -210,6 +218,7 @@ final class TestLifecycle implements TestLifecycleInterface
         return $this;
     }
 
+    #[\Override]
     public function updateTestSuccess(): self
     {
         $this->lifecycle->updateTest(
@@ -219,6 +228,7 @@ final class TestLifecycle implements TestLifecycleInterface
         return $this;
     }
 
+    #[\Override]
     public function attachReports(): self
     {
         $originalTest = $this->getCurrentTest()->getOriginalTest();
@@ -247,6 +257,7 @@ final class TestLifecycle implements TestLifecycleInterface
         return $this;
     }
 
+    #[\Override]
     public function updateTestResult(): self
     {
         $this->lifecycle->updateTest(
@@ -291,6 +302,7 @@ final class TestLifecycle implements TestLifecycleInterface
         return md5("$testCaseId::{$testInfo->getSignature()}::$parameterNames");
     }
 
+    #[\Override]
     public function startStep(Step $step): self
     {
         $stepResult = $this->resultFactory->createStep();
@@ -306,6 +318,7 @@ final class TestLifecycle implements TestLifecycleInterface
         return $this;
     }
 
+    #[\Override]
     public function switchToStep(Step $step): self
     {
         $this->currentStepStart =
@@ -314,6 +327,7 @@ final class TestLifecycle implements TestLifecycleInterface
         return $this;
     }
 
+    #[\Override]
     public function stopStep(): self
     {
         $stepStart = $this->getCurrentStepStart();
@@ -332,6 +346,7 @@ final class TestLifecycle implements TestLifecycleInterface
         return $this;
     }
 
+    #[\Override]
     public function updateStep(): self
     {
         $stepStart = $this->getCurrentStepStart();
@@ -357,6 +372,7 @@ final class TestLifecycle implements TestLifecycleInterface
         return $this;
     }
 
+    #[\Override]
     public function updateStepResult(): self
     {
         $this->lifecycle->updateStep(

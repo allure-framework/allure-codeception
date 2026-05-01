@@ -28,6 +28,7 @@ final class ReportTest extends Unit
      */
     private static array $testResults = [];
 
+    #[\Override]
     public static function setUpBeforeClass(): void
     {
         $buildPath = __DIR__ . '/../../../build/allure-results';

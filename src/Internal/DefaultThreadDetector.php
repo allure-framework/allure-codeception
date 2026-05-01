@@ -12,6 +12,7 @@ final class DefaultThreadDetector implements ThreadDetectorInterface
 {
     private string|false|null $host = null;
 
+    #[\Override]
     public function getHost(): ?string
     {
         $this->host ??= gethostname();
@@ -21,6 +22,7 @@ final class DefaultThreadDetector implements ThreadDetectorInterface
             : $this->host;
     }
 
+    #[\Override]
     public function getThread(): ?string
     {
         return null;

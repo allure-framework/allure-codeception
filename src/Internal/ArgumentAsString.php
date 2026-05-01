@@ -88,6 +88,7 @@ final class ArgumentAsString implements Stringable
         return trim($argument::class, "\\");
     }
 
+    #[\Override]
     public function __toString(): string
     {
         $json = json_encode(

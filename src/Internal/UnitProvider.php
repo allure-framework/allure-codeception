@@ -55,11 +55,13 @@ final class UnitProvider implements ModelProviderInterface
         ];
     }
 
+    #[\Override]
     public function getLinks(): array
     {
         return [];
     }
 
+    #[\Override]
     public function getLabels(): array
     {
         return [];
@@ -68,6 +70,7 @@ final class UnitProvider implements ModelProviderInterface
     /**
      * @throws ReflectionException
      */
+    #[\Override]
     public function getParameters(): array
     {
         $testMetadata = $this->test->getMetadata();
@@ -100,21 +103,25 @@ final class UnitProvider implements ModelProviderInterface
         return $params;
     }
 
+    #[\Override]
     public function getDisplayName(): ?string
     {
         return $this->test->getMetadata()->getName();
     }
 
+    #[\Override]
     public function getDescription(): ?string
     {
         return null;
     }
 
+    #[\Override]
     public function getDescriptionHtml(): ?string
     {
         return null;
     }
 
+    #[\Override]
     public function getFullName(): ?string
     {
         return $this->test->getTestCase()::class . '::' . $this->test->getMetadata()->getName();

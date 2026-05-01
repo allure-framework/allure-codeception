@@ -13,6 +13,7 @@ final class CeptInfoBuilder implements TestInfoBuilderInterface
     ) {
     }
 
+    #[\Override]
     public function build(?string $host, ?string $thread): TestInfo
     {
         return new TestInfo(

@@ -23,11 +23,13 @@ final class TestInfoProvider implements ModelProviderInterface
         return [new self($info)];
     }
 
+    #[\Override]
     public function getLinks(): array
     {
         return [];
     }
 
+    #[\Override]
     public function getLabels(): array
     {
         return [
@@ -38,26 +40,31 @@ final class TestInfoProvider implements ModelProviderInterface
         ];
     }
 
+    #[\Override]
     public function getParameters(): array
     {
         return [];
     }
 
+    #[\Override]
     public function getDisplayName(): ?string
     {
         return null;
     }
 
+    #[\Override]
     public function getDescription(): ?string
     {
         return null;
     }
 
+    #[\Override]
     public function getDescriptionHtml(): ?string
     {
         return null;
     }
 
+    #[\Override]
     public function getFullName(): ?string
     {
         return null;

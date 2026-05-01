@@ -63,6 +63,7 @@ final class CeptProvider implements ModelProviderInterface
         return [new self($test, $linkTemplates)];
     }
 
+    #[\Override]
     public function getLinks(): array
     {
         $this->loadLegacyModels();
@@ -70,6 +71,7 @@ final class CeptProvider implements ModelProviderInterface
         return $this->legacyLinks;
     }
 
+    #[\Override]
     public function getLabels(): array
     {
         $this->loadLegacyModels();
@@ -77,11 +79,13 @@ final class CeptProvider implements ModelProviderInterface
         return $this->legacyLabels;
     }
 
+    #[\Override]
     public function getParameters(): array
     {
         return [];
     }
 
+    #[\Override]
     public function getDisplayName(): ?string
     {
         $this->loadLegacyModels();
@@ -98,11 +102,13 @@ final class CeptProvider implements ModelProviderInterface
             : null;
     }
 
+    #[\Override]
     public function getFullName(): ?string
     {
         return $this->test->getSignature();
     }
 
+    #[\Override]
     public function getDescription(): ?string
     {
         $this->loadLegacyModels();
@@ -110,6 +116,7 @@ final class CeptProvider implements ModelProviderInterface
         return $this->legacyDescription;
     }
 
+    #[\Override]
     public function getDescriptionHtml(): ?string
     {
         return null;
