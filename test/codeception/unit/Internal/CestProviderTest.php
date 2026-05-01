@@ -8,7 +8,7 @@ use Codeception\Test\Cest;
 use Codeception\Test\Unit;
 use Qameta\Allure\Codeception\Internal\CestProvider;
 
-class CestProviderTest extends Unit
+final class CestProviderTest extends Unit
 {
     public function testFullName(): void
     {

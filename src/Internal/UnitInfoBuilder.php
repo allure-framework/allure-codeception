@@ -16,6 +16,7 @@ final class UnitInfoBuilder implements TestInfoBuilderInterface
     ) {
     }
 
+    #[\Override]
     public function build(?string $host, ?string $thread): TestInfo
     {
         $fields = $this->test->getReportFields();

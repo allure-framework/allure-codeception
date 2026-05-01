@@ -12,7 +12,7 @@ use Codeception\Step\Meta;
 use Codeception\Test\Unit;
 use Exception;
 
-class StepsTest extends Unit
+final class StepsTest extends Unit
 {
     public function testNoStepsSuccess(): void
     {
@@ -94,6 +94,7 @@ class StepsTest extends Unit
                 $this->failure = $failure;
             }
 
+            #[\Override]
             public function run(ModuleContainer $container = null): void
             {
                 $this->setFailed(true);

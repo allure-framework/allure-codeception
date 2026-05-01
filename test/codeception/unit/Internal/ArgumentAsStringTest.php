@@ -7,7 +7,7 @@ namespace Qameta\Allure\Codeception\Test\Unit\Internal;
 use Codeception\Test\Unit;
 use Qameta\Allure\Codeception\Internal\ArgumentAsString;
 
-class ArgumentAsStringTest extends Unit
+final class ArgumentAsStringTest extends Unit
 {
     /**
      * @dataProvider providerString

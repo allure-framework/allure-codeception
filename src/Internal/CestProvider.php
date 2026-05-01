@@ -49,16 +49,19 @@ final class CestProvider implements ModelProviderInterface
         ];
     }
 
+    #[\Override]
     public function getLinks(): array
     {
         return [];
     }
 
+    #[\Override]
     public function getLabels(): array
     {
         return [];
     }
 
+    #[\Override]
     public function getParameters(): array
     {
         /** @var mixed $currentExample */
@@ -80,6 +83,7 @@ final class CestProvider implements ModelProviderInterface
         );
     }
 
+    #[\Override]
     public function getDisplayName(): ?string
     {
         /** @psalm-var mixed $displayName */
@@ -90,11 +94,13 @@ final class CestProvider implements ModelProviderInterface
             : null;
     }
 
+    #[\Override]
     public function getDescription(): ?string
     {
         return null;
     }
 
+    #[\Override]
     public function getDescriptionHtml(): ?string
     {
         return null;
@@ -104,6 +110,7 @@ final class CestProvider implements ModelProviderInterface
      * @psalm-suppress MixedOperand
      * @psalm-suppress MixedArgument
      */
+    #[\Override]
     public function getFullName(): ?string
     {
         return $this->test->getTestInstance()::class . "::" . $this->test->getTestMethod();

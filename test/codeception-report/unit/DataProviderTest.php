@@ -7,7 +7,7 @@ namespace Qameta\Allure\Codeception\Test\Report\Unit;
 use Codeception\Test\Unit;
 use Qameta\Allure\Attribute;
 
-class DataProviderTest extends Unit
+final class DataProviderTest extends Unit
 {
     /**
      * @dataProvider providerData

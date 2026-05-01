@@ -41,11 +41,13 @@ final class SuiteProvider implements ModelProviderInterface
             : $providers;
     }
 
+    #[\Override]
     public function getLinks(): array
     {
         return [];
     }
 
+    #[\Override]
     public function getLabels(): array
     {
         return [
@@ -56,26 +58,31 @@ final class SuiteProvider implements ModelProviderInterface
         ];
     }
 
+    #[\Override]
     public function getParameters(): array
     {
         return [];
     }
 
+    #[\Override]
     public function getDisplayName(): ?string
     {
         return null;
     }
 
+    #[\Override]
     public function getDescription(): ?string
     {
         return null;
     }
 
+    #[\Override]
     public function getDescriptionHtml(): ?string
     {
         return null;
     }
 
+    #[\Override]
     public function getFullName(): ?string
     {
         return null;

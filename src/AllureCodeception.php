@@ -68,6 +68,7 @@ final class AllureCodeception extends Extension
      * @throws ConfigurationException
      * phpcs:disable PSR2.Methods.MethodDeclaration.Underscore
      */
+    #[\Override]
     public function _initialize(): void
     {
         parent::_initialize();

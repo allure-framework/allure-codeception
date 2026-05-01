@@ -7,7 +7,7 @@ namespace Qameta\Allure\Codeception\Test\Report\Unit;
 use Codeception\Test\Unit;
 use Qameta\Allure\Attribute;
 
-class AnnotationTest extends Unit
+final class AnnotationTest extends Unit
 {
     #[Attribute\DisplayName('Test title')]
     public function testTitleAnnotation(): void
