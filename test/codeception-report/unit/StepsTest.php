@@ -12,7 +12,7 @@ use Codeception\Step\Meta;
 use Codeception\Test\Unit;
 use Exception;
 
-class StepsTest extends Unit
+final class StepsTest extends Unit
 {
     public function testNoStepsSuccess(): void
     {

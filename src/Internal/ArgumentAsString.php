@@ -90,10 +90,16 @@ final class ArgumentAsString implements Stringable
 
     public function __toString(): string
     {
-        return json_encode(
+        $json = json_encode(
             $this->prepareArgument($this->argument),
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
         );
+
+        if ($json === false) {
+            return "";
+        }
+
+        return $json;
     }
 
     private function webDriverByAsString(object $selector): string

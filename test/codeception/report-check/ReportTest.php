@@ -21,7 +21,7 @@ use const DIRECTORY_SEPARATOR;
 use const JSON_THROW_ON_ERROR;
 use const PATHINFO_EXTENSION;
 
-class ReportTest extends Unit
+final class ReportTest extends Unit
 {
     /**
     * @var array<string, array<string, object>>
