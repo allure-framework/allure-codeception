@@ -95,7 +95,7 @@ final class StepsTest extends Unit
             }
 
             #[\Override]
-            public function run(ModuleContainer $container = null): void
+            public function run(?ModuleContainer $container = null): void
             {
                 $this->setFailed(true);
                 Unit::fail($this->failure);
