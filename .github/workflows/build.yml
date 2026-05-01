@@ -44,5 +44,12 @@ jobs:
       - name: Install dependencies
         run: composer update --prefer-dist --no-progress
 
+      - name: Show Codeception version
+        run: |
+          echo "Tested against Codeception **v$(
+            composer show codeception/codeception --format json | jq -r '.versions[0]'
+          )**" >> "$GITHUB_STEP_SUMMARY"
+        shell: bash
+
       - name: Run tests
         run: composer test
