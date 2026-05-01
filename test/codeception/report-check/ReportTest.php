@@ -242,13 +242,19 @@ class ReportTest extends Unit
             'Successful test case with two successful steps: step status' => [
                 StepsTest::class,
                 'testTwoSuccessfulSteps',
-                fn (object $tr): mixed => array_map(fn (object $s): mixed => self::property($s, 'status'), self::objectListProperty($tr, 'steps')),
+                fn (object $tr): mixed => array_map(
+                    fn (object $s): mixed => self::property($s, 'status'),
+                    self::objectListProperty($tr, 'steps'),
+                ),
                 ['passed', 'passed'],
             ],
             'Successful test case with two successful steps: step name' => [
                 StepsTest::class,
                 'testTwoSuccessfulSteps',
-                fn (object $tr): mixed => array_map(fn (object $s): mixed => self::property($s, 'name'), self::objectListProperty($tr, 'steps')),
+                fn (object $tr): mixed => array_map(
+                    fn (object $s): mixed => self::property($s, 'name'),
+                    self::objectListProperty($tr, 'steps'),
+                ),
                 ['step 1 name', 'step 2 name'],
             ],
             'First step in test case with two steps fails: status' => [
@@ -290,13 +296,19 @@ class ReportTest extends Unit
             'Second step in test case with two steps fails: step status' => [
                 StepsTest::class,
                 'testTwoStepsSecondFails',
-                fn (object $tr): mixed => array_map(fn (object $s): mixed => self::property($s, 'status'), self::objectListProperty($tr, 'steps')),
+                fn (object $tr): mixed => array_map(
+                    fn (object $s): mixed => self::property($s, 'status'),
+                    self::objectListProperty($tr, 'steps'),
+                ),
                 ['passed', 'failed'],
             ],
             'Second step in test case with two steps fails: step name' => [
                 StepsTest::class,
                 'testTwoStepsSecondFails',
-                fn (object $tr): mixed => array_map(fn (object $s): mixed => self::property($s, 'name'), self::objectListProperty($tr, 'steps')),
+                fn (object $tr): mixed => array_map(
+                    fn (object $s): mixed => self::property($s, 'name'),
+                    self::objectListProperty($tr, 'steps'),
+                ),
                 ['step 1 name', 'step 2 name'],
             ],
             'Nested steps: root names' => [
@@ -308,13 +320,19 @@ class ReportTest extends Unit
             'Nested steps: step 1 substep names' => [
                 NestedStepsCest::class,
                 'makeNestedSteps',
-                fn (object $tr): mixed => array_map(fn (object $s): mixed => self::property($s, 'name'), self::objectListProperty(self::singleStep($tr), 'steps')),
+                fn (object $tr): mixed => array_map(
+                    fn (object $s): mixed => self::property($s, 'name'),
+                    self::objectListProperty(self::singleStep($tr), 'steps'),
+                ),
                 ['i expect condition 1', 'Step 1.1', 'Step 1.2'],
             ],
             'Nested steps: step 1.1 substep names' => [
                 NestedStepsCest::class,
                 'makeNestedSteps',
-                fn (object $tr): mixed => array_map(fn (object $s): mixed => self::property($s, 'name'), self::objectListProperty(self::findStep(self::singleStep($tr), "Step 1.1"), 'steps')),
+                fn (object $tr): mixed => array_map(
+                    fn (object $s): mixed => self::property($s, 'name'),
+                    self::objectListProperty(self::findStep(self::singleStep($tr), "Step 1.1"), 'steps'),
+                ),
                 ['i expect condition 1.1', 'Step 1.1.1'],
             ],
             'Nested steps: level 1.1.1 names' => [
@@ -334,7 +352,10 @@ class ReportTest extends Unit
             'Nested steps: level 1.2 names' => [
                 NestedStepsCest::class,
                 'makeNestedSteps',
-                fn (object $tr): mixed => array_map(fn (object $s): mixed => self::property($s, 'name'), self::objectListProperty(self::findStep(self::singleStep($tr), "Step 1.2"), 'steps')),
+                fn (object $tr): mixed => array_map(
+                    fn (object $s): mixed => self::property($s, 'name'),
+                    self::objectListProperty(self::findStep(self::singleStep($tr), "Step 1.2"), 'steps'),
+                ),
                 ['i expect condition 1.2'],
             ],
         ];
