@@ -12,6 +12,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   static-checks:
     name: Run static checks
@@ -20,10 +24,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up PHP ${{ matrix.php-version }}
+      - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}
+          php-version: "8.3"
 
       - name: Validate composer.json
         run: composer validate
