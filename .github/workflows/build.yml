@@ -13,6 +13,30 @@ permissions:
   contents: read
 
 jobs:
+  static-checks:
+    name: Run static checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up PHP ${{ matrix.php-version }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+
+      - name: Validate composer.json
+        run: composer validate
+
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-progress
+
+      - name: Run PHP_CodeSniffer
+        run: vendor/bin/phpcs -sp
+
+      - name: Run Psalm
+        run: vendor/bin/psalm --shepherd
+
   tests:
     name: Test on ${{ matrix.os }} php${{ matrix.php-version }}
     runs-on: ${{ matrix.os }}-latest
@@ -41,9 +65,6 @@ jobs:
           coverage: xdebug
           ini-values: error_reporting=E_ALL
 
-      - name: Validate composer.json and composer.lock
-        run: composer validate
-
       - name: Install dependencies
         run: composer update --prefer-dist --no-progress
 
@@ -54,5 +75,11 @@ jobs:
           )**" >> "$GITHUB_STEP_SUMMARY"
         shell: bash
 
-      - name: Run tests
-        run: composer test
+      - name: Run unit tests tests
+        run: composer test-unit
+
+      - name: Run samples
+        run: composer test-report-generate
+
+      - name: Assert samples
+        run: composer test-report-check
