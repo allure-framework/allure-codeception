@@ -310,7 +310,7 @@ final class ReportTest extends Unit
                 StepsTest::class,
                 'testTwoStepsSecondFails',
                 fn (object $tr): mixed => array_map(
-                    fn (object $s): mixed => self::getName($s),
+                    fn (object $s): mixed => self::allureName($s),
                     self::steps($tr),
                 ),
                 ['step 1 name', 'step 2 name'],
@@ -357,7 +357,7 @@ final class ReportTest extends Unit
                 NestedStepsCest::class,
                 'makeNestedSteps',
                 fn (object $tr): mixed => array_map(
-                    fn (object $s): mixed => self::getName($s),
+                    fn (object $s): mixed => self::allureName($s),
                     self::steps(self::findStep(self::singleStep($tr), "Step 1.2")),
                 ),
                 ['i expect condition 1.2'],
@@ -497,7 +497,7 @@ final class ReportTest extends Unit
         return array_values($result);
     }
 
-    private static function getName(object $value): string
+    private static function allureName(object $value): string
     {
         return self::stringProperty($value, "name");
     }
