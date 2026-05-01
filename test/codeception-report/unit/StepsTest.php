@@ -85,6 +85,9 @@ class StepsTest extends Unit
         return new class ($failure, $name) extends Meta {
             private string $failure;
 
+            /**
+             * @param array<array-key, string> $arguments
+             */
             public function __construct(string $failure, string $action, array $arguments = [])
             {
                 parent::__construct($action, $arguments);
