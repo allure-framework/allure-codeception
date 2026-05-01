@@ -12,7 +12,7 @@ on:
 jobs:
   tests:
     name: Test on ${{ matrix.os }} php${{ matrix.php-version }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}-latest
     strategy:
       fail-fast: false
       matrix:
@@ -22,9 +22,9 @@ jobs:
           - "8.2"
           - "8.3"
         os:
-          - ubuntu-latest
-          - windows-latest
-          - macOS-latest
+          - ubuntu
+          - windows
+          - macOS
 
     steps:
       - name: Checkout
