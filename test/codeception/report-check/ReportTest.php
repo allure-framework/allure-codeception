@@ -10,6 +10,9 @@ use Qameta\Allure\Codeception\Test\Report\Unit\AnnotationTest;
 use Qameta\Allure\Codeception\Test\Report\Unit\StepsTest;
 use RuntimeException;
 
+use function array_filter;
+use function array_map;
+use function array_values;
 use function file_get_contents;
 use function is_file;
 use function json_decode;
