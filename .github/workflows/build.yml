@@ -11,7 +11,7 @@ on:
 
 jobs:
   tests:
-    name: PHP ${{ matrix.php-version }} on ${{ matrix.os }} (${{ matrix.composer-options }})
+    name: Test on ${{ matrix.os }} php${{ matrix.php-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -25,9 +25,7 @@ jobs:
           - ubuntu-latest
           - windows-latest
           - macOS-latest
-        composer-options:
-          - ""
-          - "--prefer-lowest"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -44,10 +42,7 @@ jobs:
         run: composer validate
 
       - name: Install dependencies
-        run: composer update
-          --prefer-dist
-          --no-progress
-          ${{ matrix.composer-options }}
+        run: composer update --prefer-dist --no-progress
 
       - name: Run tests
         run: composer test
