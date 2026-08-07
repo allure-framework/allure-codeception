@@ -46,13 +46,18 @@
             "Qameta\\Allure\\Codeception\\Test\\Report\\": "test/codeception-report/_support/",
             "Qameta\\Allure\\Codeception\\Test\\Report\\Functional\\": "test/codeception-report/functional/",
             "Qameta\\Allure\\Codeception\\Test\\Report\\Acceptance\\": "test/codeception-report/acceptance/",
-            "Qameta\\Allure\\Codeception\\Test\\Report\\Unit\\": "test/codeception-report/unit/"
+            "Qameta\\Allure\\Codeception\\Test\\Report\\Unit\\": "test/codeception-report/unit/",
+            "Qameta\\Allure\\Codeception\\Test\\Hooks\\": [
+                "test/hooks-fixtures/_support/",
+                "test/hooks-fixtures/unit/"
+            ]
         }
     },
     "scripts": {
         "build": [
             "vendor/bin/codecept build",
             "vendor/bin/codecept build -c codeception-report.yml",
+            "vendor/bin/codecept build -c codeception-hooks.yml",
             "vendor/bin/codecept gherkin:snippets acceptance -c codeception-report.yml"
         ],
         "test-cs": "vendor/bin/phpcs -sp",

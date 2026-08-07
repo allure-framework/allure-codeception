@@ -1,0 +1,4 @@
+actor: UnitTester
+modules:
+  enabled:
+    - \Qameta\Allure\Codeception\Test\Hooks\Helper\HookFailHelper
