@@ -10,10 +10,13 @@ use Codeception\Test\Cest;
 use Codeception\Test\Gherkin;
 use Codeception\Test\TestCaseWrapper;
 use Codeception\TestInterface;
+use Qameta\Allure\Allure;
 use Qameta\Allure\AllureLifecycleInterface;
+use Qameta\Allure\Codeception\AllureAdapterInterface;
 use Qameta\Allure\Codeception\Setup\ThreadDetectorInterface;
 use Qameta\Allure\Io\DataSourceFactory;
 use Qameta\Allure\Model\EnvProvider;
+use Qameta\Allure\Model\FixtureResult;
 use Qameta\Allure\Model\ModelProviderChain;
 use Qameta\Allure\Model\Parameter;
 use Qameta\Allure\Model\ResultFactoryInterface;
@@ -42,6 +45,8 @@ final class TestLifecycle implements TestLifecycleInterface
 
     private ?StepStartInfo $currentStepStart = null;
 
+    private bool $suiteHookContext = false;
+
     /**
      * @psalm-var WeakMap<Step, StepStartInfo>
      */
@@ -55,6 +60,7 @@ final class TestLifecycle implements TestLifecycleInterface
         private ThreadDetectorInterface $threadDetector,
         private LinkTemplateCollectionInterface $linkTemplates,
         private array $env,
+        private AllureAdapterInterface $adapter,
     ) {
         /** @psalm-var WeakMap<Step, StepStartInfo> $this->stepStarts */
         $this->stepStarts = new WeakMap();
@@ -92,6 +98,7 @@ final class TestLifecycle implements TestLifecycleInterface
     public function resetSuite(): self
     {
         $this->currentSuite = null;
+        $this->suiteHookContext = false;
 
         return $this;
     }
@@ -102,6 +109,7 @@ final class TestLifecycle implements TestLifecycleInterface
         $thread = $this->threadDetector->getThread();
         $this->lifecycle->switchThread($thread);
 
+        $this->suiteHookContext = false;
         $this->currentTest = $this
             ->getTestInfoBuilder($test)
             ->build(
@@ -136,6 +144,7 @@ final class TestLifecycle implements TestLifecycleInterface
             containerUuid: $containerResult->getUuid(),
             testUuid: $testResult->getUuid(),
         );
+        $this->adapter->clearTestStarted($testResult->getUuid());
 
         return $this;
     }
@@ -180,7 +189,9 @@ final class TestLifecycle implements TestLifecycleInterface
     #[\Override]
     public function startTest(): self
     {
-        $this->lifecycle->startTest($this->getCurrentTestStart()->getTestUuid());
+        $testUuid = $this->getCurrentTestStart()->getTestUuid();
+        $this->lifecycle->startTest($testUuid);
+        $this->adapter->markTestStarted($testUuid);
 
         return $this;
     }
@@ -188,6 +199,8 @@ final class TestLifecycle implements TestLifecycleInterface
     #[\Override]
     public function stopTest(): self
     {
+        $this->completeHookFixtureSuccess();
+
         $testUuid = $this->getCurrentTestStart()->getTestUuid();
         $this
             ->lifecycle
@@ -200,6 +213,7 @@ final class TestLifecycle implements TestLifecycleInterface
             ->stopContainer($containerUuid);
         $this->lifecycle->writeContainer($containerUuid);
 
+        $this->adapter->clearTestStarted($testUuid);
         $this->currentTest = null;
         $this->currentTestStart = null;
 
@@ -388,5 +402,196 @@ final class TestLifecycle implements TestLifecycleInterface
         );
 
         return $this;
+    }
+
+    #[\Override]
+    public function ensureSuiteContainer(): self
+    {
+        $suite = $this->getCurrentSuite();
+        $this->suiteHookContext = true;
+
+        if ($this->adapter->getSuiteContainerId($suite->getName()) !== null) {
+            return $this;
+        }
+
+        $containerResult = $this->resultFactory->createContainer();
+        $this->lifecycle->startContainer($containerResult);
+        $this->adapter->registerSuiteContainer($suite->getName(), $containerResult->getUuid());
+
+        return $this;
+    }
+
+    #[\Override]
+    public function writeSuiteContainer(): self
+    {
+        $suite = $this->currentSuite;
+        if ($suite === null) {
+            return $this;
+        }
+
+        $containerId = $this->adapter->getSuiteContainerId($suite->getName());
+        if ($containerId === null) {
+            return $this;
+        }
+
+        $this->completeHookFixtureSuccess();
+        $this->lifecycle->stopContainer($containerId);
+        $this->lifecycle->writeContainer($containerId);
+        $this->adapter->clearSuiteContainer($suite->getName());
+        $this->suiteHookContext = false;
+
+        return $this;
+    }
+
+    #[\Override]
+    public function startBeforeHookFixture(string $hookName): self
+    {
+        return $this->startHookFixture($hookName, before: true);
+    }
+
+    #[\Override]
+    public function startAfterHookFixture(string $hookName): self
+    {
+        return $this->startHookFixture($hookName, before: false);
+    }
+
+    #[\Override]
+    public function completeHookFixtureSuccess(): self
+    {
+        $uuid = $this->adapter->getActiveFixtureUuid();
+        if ($uuid === null) {
+            return $this;
+        }
+
+        $this->lifecycle->updateFixture(
+            static fn (FixtureResult $fixture) => $fixture->setStatus(Status::passed()),
+            $uuid,
+        );
+        $this->lifecycle->stopFixture($uuid);
+        $this->adapter->clearActiveFixture();
+
+        return $this;
+    }
+
+    #[\Override]
+    public function completeHookFixtureFailure(
+        Status $status,
+        ?string $message = null,
+        ?string $trace = null,
+    ): self {
+        $uuid = $this->adapter->getActiveFixtureUuid();
+        $hookName = $this->adapter->getActiveHookName() ?? 'hook';
+        if ($uuid === null) {
+            return $this;
+        }
+
+        $prefixed = HookFailureMessage::format($hookName, $message);
+
+        $this->lifecycle->updateFixture(
+            static function (FixtureResult $fixture) use ($status, $prefixed, $trace): void {
+                $fixture
+                    ->setStatus($status)
+                    ->setStatusDetails(
+                        (new StatusDetails())
+                            ->setMessage($prefixed)
+                            ->setTrace($trace),
+                    );
+            },
+            $uuid,
+        );
+        $this->lifecycle->stopFixture($uuid);
+
+        if (!$this->adapter->hasEmittedHookGlobalError($uuid)) {
+            Allure::globalError($prefixed, $trace);
+            $this->adapter->markHookGlobalErrorEmitted($uuid);
+        }
+
+        $this->adapter->clearActiveFixture();
+
+        return $this;
+    }
+
+    #[\Override]
+    public function completeOrphanHookFailure(
+        Status $status,
+        ?string $message = null,
+        ?string $trace = null,
+    ): self {
+        if ($this->currentTestStart === null) {
+            return $this;
+        }
+
+        if ($this->adapter->getActiveFixtureUuid() === null) {
+            return $this;
+        }
+
+        if ($this->adapter->wasTestStarted($this->getCurrentTestStart()->getTestUuid())) {
+            return $this;
+        }
+
+        $this->completeHookFixtureFailure($status, $message, $trace);
+
+        return $this;
+    }
+
+    #[\Override]
+    public function flushActiveHookFixtureFailure(
+        Status $status,
+        ?string $message = null,
+        ?string $trace = null,
+    ): self {
+        if ($this->adapter->getActiveFixtureUuid() === null) {
+            return $this;
+        }
+
+        $this->completeHookFixtureFailure($status, $message, $trace);
+
+        return $this;
+    }
+
+    #[\Override]
+    public function finalizePendingTest(): self
+    {
+        if ($this->currentTestStart === null) {
+            return $this;
+        }
+
+        $this->updateTestResult();
+        $this->stopTest();
+
+        return $this;
+    }
+
+    private function startHookFixture(string $hookName, bool $before): self
+    {
+        $this->completeHookFixtureSuccess();
+
+        $fixture = $this
+            ->resultFactory
+            ->createFixture()
+            ->setName($hookName);
+
+        $containerId = $this->resolveContainerId();
+        if ($before) {
+            $this->lifecycle->startBeforeFixture($fixture, $containerId);
+        } else {
+            $this->lifecycle->startAfterFixture($fixture, $containerId);
+        }
+
+        $this->adapter->setActiveFixture($fixture->getUuid(), $hookName);
+
+        return $this;
+    }
+
+    private function resolveContainerId(): string
+    {
+        if ($this->suiteHookContext) {
+            $suite = $this->getCurrentSuite();
+
+            return $this->adapter->getSuiteContainerId($suite->getName())
+                ?? throw new RuntimeException("Suite container is not set for {$suite->getName()}");
+        }
+
+        return $this->getCurrentTestStart()->getContainerUuid();
     }
 }

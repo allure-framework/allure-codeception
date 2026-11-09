@@ -1,0 +1,17 @@
+namespace: Qameta\Allure\Codeception\Test\Hooks
+
+settings:
+  lint: true
+paths:
+  tests: test/hooks-fixtures
+  output: build/hooks-fixtures
+  support: test/hooks-fixtures/_support
+  data: test/hooks-fixtures/_data
+
+extensions:
+  enabled:
+    - Qameta\Allure\Codeception\AllureCodeception
+  config:
+    Qameta\Allure\Codeception\AllureCodeception:
+      outputDirectory: allure-results-hooks
+      setupHook: Qameta\Allure\Codeception\Test\Hooks\Setup\OutputDirectoryHook
